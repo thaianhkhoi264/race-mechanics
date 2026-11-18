@@ -58,3 +58,9 @@ def test_wit_summary_cm21_sprint(botlib, cm21):
     assert f.data["gain_m"][1200.0] == pytest.approx(10.5, abs=0.2)
     assert "matters a lot" in f.data["summary"]
     assert "not a concern" in f.data["summary"]
+
+
+def test_to_the_finish_wording():
+    out = calc._clear_activates("On the final straight (1,099–1,600 m to the finish) — if you're 2nd")
+    assert out == ("On the final straight (from the 1,099 m mark to the finish line at 1,600 m)"
+                   " — if you're 2nd")

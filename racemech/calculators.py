@@ -90,8 +90,13 @@ _CORNER_RANDOM = re.compile(
     r"^Whenever its conditions are met \(([^)]*)\)(.*?)(?: — |, )?also `corner_random==(\d)`$")
 
 
+_TO_FINISH = re.compile(r"\(([\d,]+)\s*[-–]\s*([\d,]+) m to the finish\)")
+
+
 def _clear_activates(text: str) -> str:
-    """Reword raw tokens the bot's describer leaves in (it doesn't map corner_random yet)."""
+    """Reword raw tokens the bot's describer leaves in (it doesn't map corner_random yet), and
+    "(1,099–1,600 m to the finish)", which reads like a distance from the finish line."""
+    text = _TO_FINISH.sub(lambda m: f"(from the {m[1]} m mark to the finish line at {m[2]} m)", text)
     m = _CORNER_RANDOM.match(text)
     if m:
         n = int(m[3])
