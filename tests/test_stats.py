@@ -25,3 +25,9 @@ def test_downhill_share_and_uphill_loss():
     assert stats.downhill_mode_share(1000) == pytest.approx(0.4 / 0.6)
     assert stats.uphill_loss(20000, 1000) == pytest.approx(0.4)      # 2% grade
     assert stats.base_speed(1600) == pytest.approx(20.4)
+
+
+def test_downhill_gain():
+    hill = [{"start": 100, "length": 775, "slope": -10000}]       # CM21's 1% downhill
+    assert stats.downhill_boost(-10000) == pytest.approx(0.4)
+    assert stats.downhill_gain_m(hill, 1200, 20.8) == pytest.approx(775 / 20.8 * 0.48 / 0.68 * 0.4)

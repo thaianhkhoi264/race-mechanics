@@ -56,3 +56,14 @@ def base_speed(distance: float) -> float:
 def uphill_loss(raw_slope: float, power: float) -> float:
     """Target-speed loss on an uphill in m/s: slope% x 200 / Power."""
     return raw_slope / SLOPE_SCALE * 200.0 / power
+
+
+def downhill_boost(raw_slope: float) -> float:
+    """Target-speed bonus in downhill accel mode, m/s: 0.3 + slope%/10."""
+    return 0.3 + abs(raw_slope) / SLOPE_SCALE / 10.0
+
+
+def downhill_gain_m(slopes: list[dict], wit: float, speed: float) -> float:
+    """Expected metres gained over the given downhills: time on them x share in the mode x boost."""
+    share = downhill_mode_share(wit)
+    return sum(s["length"] / speed * share * downhill_boost(s["slope"]) for s in slopes)

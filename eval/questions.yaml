@@ -141,7 +141,7 @@
 - id: downhill-mode
   category: mechanics
   question: How does downhill accel mode work?
-  keywords: [["0.04"], ["60%", "60 %"]]
+  keywords: [["0.04", "24%"], ["60%", "60 %", "40%"]]
 
 - id: decline-support-deck
   category: decline
@@ -306,7 +306,7 @@
 - id: general-downhill
   category: general
   question: how does downhill accel mode help
-  keywords: [["wit"], ["60%", "0.4"]]
+  keywords: [["wit"], ["60%", "0.4", "40%"]]
 
 - id: general-guts-front
   category: general
@@ -328,7 +328,7 @@
 - id: stat-wit-cm21
   category: stats
   question: other than skills, how much does wit matter in cm21
-  keywords: [["downhill"], ["stamina", "hp"]]
+  keywords: [["downhill"], ["length", "lengths"], ["not a concern", "not a major concern", "not an issue", "not a problem", "doesn't matter", "does not matter", "isn't a concern", "relatively minor", "sprint"]]
 
 - id: stat-wit-value-cm22
   category: stats
