@@ -21,7 +21,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from racemech import gamedata
-from racemech.data_sync import course_data_path
+from racemech.data_sync import cm_timeline_path, course_data_path
 
 
 class BotLibError(RuntimeError):
@@ -35,6 +35,8 @@ class Course:
     display: str          # e.g. "CM#22 — Tokyo 1600m Dirt, Left, Soft, Winter, Snow"
     cm: dict | None       # {"ground", "season", "weather", ...} for a CM, else None
     is_cm: bool
+    predicted: bool = False   # an unconfirmed events prediction
+    note: str | None = None   # where the course came from, when it is not the Global game data
 
 
 class BotLib:
@@ -86,6 +88,8 @@ class BotLib:
         st._skill_averages = st._scan_recovery_debuff_averages(global_only, self.skill_names)
         st._data_loaded = True
 
+        self.timeline = self._load_timeline()
+
         self._loaded = True
         return self
 
@@ -98,11 +102,47 @@ class BotLib:
         s = self.game.skills.get(sid)
         return s.name if s else None
 
+    def _load_timeline(self) -> dict[int, dict]:
+        """Announced/predicted CMs from the cached events timeline, parsed by the bot's own parser."""
+        path = cm_timeline_path(self.data_dir)
+        if not path.is_file():
+            return {}
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return {}
+        out = {}
+        for ev in data.get("events", []):
+            if ev.get("type") == "champions_meeting":
+                parsed = self.cm._parse_cm_event(ev)
+                if parsed:
+                    out[parsed["number"]] = parsed
+        return out
+
+    def _timeline_course(self, number: int) -> Course | None:
+        ev = self.timeline.get(number)
+        if ev is None:
+            return None
+        cid = self.cm._cm_course_id(ev)
+        entry = self.cm.get_course_entry(cid) if cid is not None else None
+        if entry is None:
+            return None
+        predicted = not ev.get("is_confirmed")
+        display = self.cm._cm_course_display(ev)
+        cm = {"number": number, "ground": ev["ground"], "season": ev["season"], "weather": ev["weather"]}
+        if predicted:
+            note = (f"CM#{number} is a PREDICTED course (events timeline, not confirmed yet); say so, "
+                    "since the course, ground or weather may change.")
+        else:
+            note = (f"CM#{number} is announced (events timeline) but not in the Global game data yet; "
+                    "ground and weather may still change.")
+        return Course(cid, entry, display, cm, True, predicted, note)
+
     def course_for_cm(self, number: int) -> Course | None:
-        """A released Champions Meeting from the Global database (future ones are not known)."""
+        """A Champions Meeting: the Global game data first, else the cached events timeline."""
         c = self.game.champions.get(number)
         if c is None:
-            return None
+            return self._timeline_course(number)
         entry = self.cm.get_course_entry(c.course_set)
         if entry is None:
             return None
@@ -114,8 +154,10 @@ class BotLib:
     def current_cm_number(self, now: datetime | None = None) -> int | None:
         """The running CM, else the next one, else the latest known."""
         ts = (now or datetime.now(UTC)).timestamp()
-        cms = sorted(self.game.champions.values(), key=lambda c: c.number)
-        for c in cms:
-            if c.start_ts <= ts <= c.end_ts or c.start_ts > ts:
-                return c.number
-        return cms[-1].number if cms else None
+        spans = {n: (ev["start_ts"], ev["end_ts"]) for n, ev in self.timeline.items() if ev["start_ts"]}
+        spans |= {c.number: (c.start_ts, c.end_ts) for c in self.game.champions.values()}
+        for n in sorted(spans):
+            start, end = spans[n]
+            if start <= ts <= (end or start) or start > ts:
+                return n
+        return max(spans) if spans else None

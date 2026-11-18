@@ -24,6 +24,7 @@ The language model never does the maths. Every question goes through three steps
 | Skills (conditions, effects, durations), names, descriptions | Global game client's `master.mdb` (copied); JP client only for skills Global lacks, marked JP-only | No |
 | Track names, released Champions Meetings (course, ground, season, weather) | Global `master.mdb` | No |
 | Course geometry (corners, straights, slopes) | community skill data `course_data.json`, cached | Only during `racemech sync` |
+| Announced / predicted Champions Meetings not in the game data yet (labelled as such) | events timeline (the one bot_repo uses), cached | Only during `racemech sync` |
 | Stamina model, trigger windows, accel ratings | bot_repo calculator modules, imported read-only | No |
 | Condition-field reference | bot_repo checkout (`tests/skill_condition_explanation.txt`) | No |
 | Mechanics knowledge | `racemech/knowledge/*.md` in this repo | No |

@@ -100,6 +100,8 @@ class ContextBuilder:
                 ctx.notes.append(f"CM#{number} is not in the game data (not released yet or unknown), so no "
                                  "course-specific numbers are available for it.")
         course = ctx.course
+        if course is not None and course.note:
+            ctx.notes.append(course.note)
 
         greens, recoveries, candidates, debuffs = self._classify(ent, course)
         ctx.notes += [n for n in ent.notes if n not in ctx.notes]
