@@ -63,3 +63,18 @@ skills:
 families:
   subdued: "Subdued {styles}"
   hesitant: "Hesitant {styles}"
+
+# JP / community terms -> the Global term to answer with (the answer mentions the JP term once,
+# in brackets). Source: the uma.guide glossary.
+terms:
+  kakari: Rushed
+  nige: Front Runner
+  oonige: Runaway
+  senkou: Pace Chaser
+  sashi: Late Surger
+  oikomi: End Closer
+  oiko: End Closer
+  oikurabe: Dueling
+  chanmi: Champions Meeting
+  bashin: lengths
+  aoharu: Unity Cup
