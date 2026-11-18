@@ -27,6 +27,9 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--show-context", action="store_true", help="print what the model was given")
     ctx = sub.add_parser("context", help="show the context for a question without calling the model")
     ctx.add_argument("question", nargs="+")
+    ev = sub.add_parser("eval", help="run the evaluation set against one or more models")
+    ev.add_argument("--models", help="comma-separated Ollama tags (default: the configured model)")
+    ev.add_argument("--only", help="comma-separated question ids")
     return p
 
 
@@ -56,6 +59,29 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "context":
         from racemech.assistant import Assistant
         print(Assistant(settings).builder.build(" ".join(args.question)).render())
+        return 0
+    if args.command == "eval":
+        from racemech import evaluation
+        from racemech.assistant import Assistant
+        from racemech.config import REPO_ROOT
+        models = args.models.split(",") if args.models else [settings.model]
+        only = set(args.only.split(",")) if args.only else None
+        questions = evaluation.load_questions()
+        summaries = []
+        for model in models:
+            assistant = Assistant(settings, model.strip())
+            if not assistant.client.available():
+                print(UNAVAILABLE)
+                return 2
+            print(f"\n=== {model}")
+            scores = evaluation.run(assistant, questions, only)
+            path = evaluation.write_report(model, scores, REPO_ROOT / "reports")
+            summaries.append(evaluation.summary(model, scores))
+            print(f"report: {path}")
+        print("\nmodel".ljust(66) + "passed  invented  median s  by category")
+        for s in summaries:
+            print(f"{s['model']:65} {s['passed']:>2}/{s['total']:<3} {s['with_invented_numbers']:>6}"
+                  f"  {s['median_seconds']:8.1f}  {s['by_category']}")
         return 0
     if args.command in ("ask", "chat"):
         from racemech.assistant import Assistant
