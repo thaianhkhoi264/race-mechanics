@@ -1,0 +1,164 @@
+# Evaluation set. Expected values come from the calculators (verified in the design
+# discussion) or the knowledge pack.
+#
+# Per question (all optional except id/question):
+#   numbers:  [{value, tol}]    the answer must contain a number within tol of each value
+#   keywords: [[alt, alt], ...] every group must match (any alternative, case-insensitive)
+#   forbid:   [str]             none may appear
+#   decline:  true              the answer must say it doesn't have the information
+# Every answer is also checked for numbers that do not appear in its context ("invented").
+
+- id: cm22-white-recovery
+  category: stamina
+  question: For CM22, how much stamina is a white recovery worth?
+  numbers: [{value: 38, tol: 1.5}, {value: 42, tol: 1.5}]
+
+- id: cm22-debuffers-770-ambiguous-recovery
+  category: stamina
+  question: How many debuffers does a late surger with 770 stamina and 0.35 recovery survive in CM22?
+  numbers: [{value: 3, tol: 0.35}]
+  keywords: [["3.5%", "3.5 %", "0.035"]]
+
+- id: cm22-debuffers-770-no-recovery
+  category: stamina
+  question: In CM22, how many debuffers can a late surger with 770 stamina survive without any recovery skills?
+  numbers: [{value: 2.3, tol: 0.35}]
+
+- id: cm20-late-min-stamina
+  category: stamina
+  question: What's the minimum stamina for a late surger to full spurt in CM20?
+  numbers: [{value: 888, tol: 2}]
+
+- id: cm19-pace-min-stamina
+  category: stamina
+  question: How much stamina does a pace chaser need in CM19?
+  numbers: [{value: 889, tol: 2}]
+
+- id: cm21-sprint-any-stamina
+  category: stamina
+  question: How much stamina does a front runner need for CM21?
+  keywords: [["any stamina", "any amount", "no minimum", "is enough", "doesn't need", "does not need"]]
+  forbid: ["-37", "−37"]
+
+- id: cm20-white-recovery-late
+  category: stamina
+  question: How much stamina is a white recovery worth for a late surger in CM20?
+  numbers: [{value: 60, tol: 2}]
+
+- id: cm20-900-lie-in-wait
+  category: stamina
+  question: How many debuffers can a late surger with 900 stamina survive in CM20 if she has Lie in Wait?
+  keywords: [["1.6", "1 debuffer", "one debuffer", "1 whole"]]
+
+- id: cm21-moving-past
+  category: skill
+  question: What does Moving Past, and Beyond do in CM21?
+  numbers: [{value: 550, tol: 0}, {value: 788, tol: 0}]
+  keywords: [["5th"], ["0.4"]]
+
+- id: cm19-budding-blossom-typo
+  category: skill
+  question: when does budding blosom activate on cm19
+  numbers: [{value: 1674, tol: 0}, {value: 2200, tol: 0}]
+  keywords: [["3rd"], ["blocked"]]
+
+- id: cm21-louder-precondition
+  category: skill
+  question: What do I need for Louder! Tracen Cheer! to activate in CM21?
+  keywords: [["7th", "back"], ["rushed"]]
+
+- id: cm22-right-handed-left-track
+  category: skill
+  question: Does Right-Handed work in CM22?
+  keywords: [["can't", "cannot", "not activate", "won't", "does not", "doesn't", "no,", "no."]]
+
+- id: cm22-early-lead-global
+  category: skill
+  question: When does Early Lead activate in CM22?
+  numbers: [{value: 267, tol: 0}]
+  keywords: [["opening", "early", "start"]]
+
+- id: cm20-claw-forward
+  category: skill
+  question: Is Claw Forward good for CM20?
+  keywords: [["great accel"], ["late surger"]]
+
+- id: cm21-inherited-moving-past
+  category: skill
+  question: Is inherited Moving Past and Beyond good in CM21?
+  keywords: [["bad"], ["0.2"]]
+
+- id: groundwork-front-runners
+  category: strategy
+  question: Why is Groundwork good for front runners?
+  keywords: [["lead", "cruising"], ["3"]]
+
+- id: cm21-shadow-break
+  category: skill
+  question: What does Shadow Break do in CM21?
+  keywords: [["0.45"], ["0.35"], ["blocked"]]
+
+- id: guts-uses
+  category: mechanics
+  question: What is guts used for in races?
+  keywords: [["hp", "consumption", "drain"], ["minimum speed"], ["spurt"]]
+
+- id: stacking
+  category: mechanics
+  question: Are velocity and accel skills additive or multiplicative when they overlap?
+  keywords: [["additive", "add up", "add together", "added"]]
+
+- id: order-rate-rounding
+  category: mechanics
+  question: In a Champions Meeting, what placing does order_rate>50 mean?
+  keywords: [["6th"]]
+
+- id: change-order-onetime
+  category: mechanics
+  question: What does change_order_onetime<0 mean in a skill condition?
+  keywords: [["overtook", "overtake", "passed", "passing"]]
+
+- id: duration-scaling
+  category: mechanics
+  question: How long does a 4 second skill last on a 2500m course?
+  numbers: [{value: 10, tol: 0.05}]
+
+- id: wit-activation-chance
+  category: mechanics
+  question: What's the skill activation chance with 900 wit?
+  numbers: [{value: 90, tol: 0}]
+
+- id: base-speed-1200
+  category: mechanics
+  question: What is the base speed of a 1200m race?
+  numbers: [{value: 20.8, tol: 0}]
+
+- id: rushed-chance-600
+  category: mechanics
+  question: What's the chance to get rushed with 600 wit?
+  keywords: [["14", "13.26", "13.3"]]
+
+- id: downhill-mode
+  category: mechanics
+  question: How does downhill accel mode work?
+  keywords: [["0.04"], ["60%", "60 %"]]
+
+- id: decline-support-deck
+  category: decline
+  question: What's the best support card deck for CM22?
+  decline: true
+
+- id: decline-predict-winner
+  category: decline
+  question: Who will win the next Champions Meeting?
+  decline: true
+
+- id: decline-fake-skill
+  category: decline
+  question: What does the skill Magic Banana Sprint do?
+  decline: true
+
+- id: decline-unreleased-cm
+  category: decline
+  question: What course is CM30 on?
+  decline: true

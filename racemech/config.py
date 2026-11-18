@@ -19,8 +19,13 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 class Settings:
     # Read-only path to a bot_repo checkout whose calculator modules are reused.
     bot_repo: Path = Path(r"<bot_repo path>")
-    # Downloaded game data (uma-tools JSON) lives here.
+    # Local copies of game data live here (never committed).
     data_dir: Path = REPO_ROOT / "data"
+    # Game clients' master databases. Global is the source of truth; JP only fills missing skills.
+    global_master: Path = Path(
+        r"<path to the Global client>"
+        r"\UmamusumePrettyDerby_Data\Persistent\master\master.mdb")
+    jp_master: Path = Path(r"<path to the JP client's master.mdb>")
     ollama_url: str = "http://localhost:11434"
     model: str = "qwen3.5:4b-q4_K_M"
     # Seconds to wait for the model before reporting it unavailable.
@@ -28,7 +33,7 @@ class Settings:
     # How long Ollama keeps the model in VRAM after a request (frees the GPU when idle).
     keep_alive: str = "5m"
     temperature: float = 0.2
-    retrieval_k: int = 4
+    retrieval_k: int = 5
 
 
 def _coerce(raw, default):
