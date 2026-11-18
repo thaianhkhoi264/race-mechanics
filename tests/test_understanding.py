@@ -21,6 +21,15 @@ SKILLS = {
     "200012": FakeSkill("Right-Handed ○"),
     "200013": FakeSkill("Right-Handed ×"),
     "201601": FakeSkill("Groundwork"),
+    "202451": FakeSkill("Pedal to the Metal"),
+    "200031": FakeSkill("Tokyo Racecourse ◎"),
+    "200032": FakeSkill("Tokyo Racecourse ○"),
+    "200131": FakeSkill("Standard Distance ◎"),
+    "200132": FakeSkill("Standard Distance ○"),
+    "200142": FakeSkill("Non-Standard Distance ○"),
+    "200891": FakeSkill("Subdued Late Surgers"),
+    "200861": FakeSkill("Subdued Pace Chasers"),
+    "200601": FakeSkill("On Your Left!"),
     "999999": FakeSkill("新スキル", source="jp"),
 }
 
@@ -36,9 +45,38 @@ def test_typo_tolerant_skill_match(matcher):
     assert e.cm == 21
 
 
-def test_punctuation_and_tier_preference(matcher):
+def test_punctuation_and_tier_default(matcher):
     e = extract("moving past and beyond vs right handed", matcher)
-    assert {s.sid for s in e.skills} == {"100591", "200011"}     # ◎ preferred, never ×
+    assert {s.sid for s in e.skills} == {"100591", "200012"}     # ○ by default, never ×
+    assert any("○" in n for n in e.notes)
+
+
+def test_tier_as_written(matcher):
+    assert extract("Right-Handed ◎ worth it?", matcher).skills[0].sid == "200011"
+
+
+@pytest.mark.parametrize("text,sid", [
+    ("is pttm good", "202451"), ("PTTM?", "202451"), ("should i get pedal", "202451"),
+    ("oyl on cm21", "200601"), ("kanata", "100591"), ("gw for front", "201601"),
+])
+def test_shorthand(matcher, text, sid):
+    assert sid in {s.sid for s in extract(text, matcher).skills}
+
+
+def test_user_example(matcher):
+    q = ("A late surger with 515 stamina in CM 22, has tokyo and standard distance. "
+         "Should I buy a white recovery skill? Will the uma survive 2 subdued debuff skill?")
+    e = extract(q, matcher)
+    by_sid = {s.sid: s for s in e.skills}
+    assert {"200032", "200132", "200891"} <= set(by_sid)        # ○ greens, style-matched debuff
+    assert "200142" not in by_sid                               # not Non-Standard Distance
+    assert by_sid["200891"].count == 2
+    assert e.recoveries == [] and e.candidate_recoveries == pytest.approx([0.015])
+    assert e.stamina == 515 and e.styles == ["late"] and e.cm == 22
+
+
+def test_venue_alone_is_not_a_skill(matcher):
+    assert not extract("what is the best skill in tokyo", matcher).skills
 
 
 def test_inherited_maps_to_9_id(matcher):

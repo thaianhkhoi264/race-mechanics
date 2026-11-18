@@ -53,14 +53,15 @@ def skill_on_course(bl: BotLib, sid: str, course: Course) -> Fact:
         lines.append("Cannot activate on this course.")
     else:
         lines += [f"Effect: {e}" for e in info["effects"]]
-        lines += [f"Activates: {a}" for a in info["activates"]]
+        lines += [f"Activates: {_clear_activates(a)}" for a in info["activates"]]
         if info["arms"]:
             lines.append(f"Precondition (must happen first): {info['arms']}")
-        if info["timing"]:
+        whole_race = all(a.startswith("Whenever its conditions are met —") or "(0–" in a
+                         for a in info["activates"]) and "late-race" not in " ".join(info["activates"])
+        if info["timing"] and not whole_race:
             lines.append(f"Timing: {clear_timing(info['timing'])}")
         if info["rating"]:
-            verdict = _accel_verdict(bl, sid, entry, course)
-            lines.append(f"Acceleration rating on this course: {verdict or info['rating']}")
+            lines.append(_rating_line(_accel_verdict(bl, sid, entry, course) or info["rating"]))
     return Fact(f"Skill: {name}", lines, {"info": info, "sid": sid})
 
 
@@ -82,6 +83,38 @@ def clear_timing(text: str) -> str:
     if m:
         return f"{m[1]} (late-race starts at {m[2]} m)"
     return text
+
+
+_CORNER_RANDOM = re.compile(
+    r"^Whenever its conditions are met \(([^)]*)\)(.*?)(?: — |, )?also `corner_random==(\d)`$")
+
+
+def _clear_activates(text: str) -> str:
+    """Reword raw tokens the bot's describer leaves in (it doesn't map corner_random yet)."""
+    m = _CORNER_RANDOM.match(text)
+    if m:
+        n = int(m[3])
+        suffix = {1: "st", 2: "nd", 3: "rd"}.get(n, "th")
+        return f"At a random point on the track's {n}{suffix} corner ({m[1]}){m[2]}"
+    return text
+
+
+def _rating_line(verdict: str) -> str:
+    """
+    Split the bot's verdict ("Bad inherited accel, high acceleration, but activates too early, requires ...")
+    into labelled parts so the overall rating can't be confused with the size word.
+    """
+    parts = [x.strip() for x in verdict.split(", ")]
+    rating = parts[0]
+    size = parts[1] if len(parts) > 1 else ""
+    rest = ", ".join(parts[2:]).removeprefix("but ").strip()
+    word = rating.split()[0].upper()
+    out = f"OVERALL RATING on this course: {word} ({rating})"
+    if size:
+        out += f". Raw size of the boost: {size} (this is not the rating)"
+    if rest:
+        out += f". Why / requirements: {rest}"
+    return out
 
 
 def _accel_verdict(bl: BotLib, sid: str, entry: dict, course: Course) -> str | None:
@@ -154,6 +187,78 @@ def recovery_equivalent(bl: BotLib, course: Course, pct: float, styles=STYLES,
     return Fact("Stamina equivalent of a recovery", lines, data)
 
 
+@dataclass
+class HPItem:
+    label: str
+    pct: float          # fraction of max HP
+    count: int = 1
+
+
+def _verdict(margin: float) -> str:
+    if margin >= 15:
+        return f"survives the full last spurt with about {margin:.0f} Stamina to spare"
+    if abs(margin) < 1:
+        return ("is borderline: exactly at the requirement, so any extra debuff or missed skill "
+                "means running out")
+    if margin >= -15:
+        return (f"is borderline: {abs(margin):.0f} Stamina {'above' if margin >= 0 else 'below'} the "
+                "requirement, so it just barely makes it or just barely runs out")
+    return f"does NOT have enough: about {-margin:.0f} Stamina short of a full last spurt"
+
+
+def stamina_plan(bl: BotLib, course: Course, style: str, stamina: float,
+                 greens: list[HPItem] | None = None, recoveries: list[HPItem] | None = None,
+                 candidates: list[HPItem] | None = None, debuffs: list[HPItem] | None = None) -> Fact:
+    """
+    Answer "is this Stamina enough?" with everything the player listed: green Stamina skills
+    (flat Stamina, label + Stamina in pct field), owned recoveries, recoveries being considered,
+    and debuffs expected from opponents. The verdict is computed here, not by the model.
+    """
+    greens, recoveries, candidates, debuffs = greens or [], recoveries or [], candidates or [], debuffs or []
+    p = _profile(bl, style, course)
+    green_total = sum(g.pct * g.count for g in greens)
+    effective = stamina + green_total
+    debuff_load = sum(d.pct * d.count for d in debuffs)
+    owned = sum(r.pct * r.count for r in recoveries)
+    need = max(required_stamina(p, debuff_load - owned), 0)
+
+    lines = [f"Course: {course.display}; running style: {STYLE_NAME[style]}"]
+    if greens:
+        lines.append(f"Effective Stamina: {stamina:g} + " + " + ".join(
+            f"{g.pct * g.count:g} ({g.label})" for g in greens) + f" = {effective:g}")
+    else:
+        lines.append(f"Effective Stamina: {effective:g}")
+    lines.append("Debuffs expected: " + (", ".join(
+        f"{d.count} x {d.label} ({d.pct * 100:.2f}% of max HP each)" for d in debuffs) if debuffs else "none")
+        + "; recoveries counted: " + (", ".join(
+            f"{r.count} x {r.label} ({r.pct * 100:g}%)" for r in recoveries) if recoveries else "none"))
+    lines.append(f"Stamina needed for a full last spurt in this situation: {need:.0f}")
+    source = f" ({stamina:g} + {green_total:g} from green skills)" if greens else ""
+    lines.append(f"VERDICT: effective Stamina {effective:g}{source} vs {need:.0f} needed -> the runner "
+                 f"{_verdict(effective - need)}.")
+    data = {"effective": effective, "need": need, "margin": effective - need}
+
+    if candidates:
+        with_c = owned + sum(c.pct * c.count for c in candidates)
+        need_c = max(required_stamina(p, debuff_load - with_c), 0)
+        label = " + ".join(f"{c.label} ({c.pct * 100:g}%)" for c in candidates)
+        gain = need - need_c
+        lines.append(f"WITH {label.upper()}: Stamina needed drops from {need:.0f} to {need_c:.0f} "
+                     f"(worth about {gain:.0f} Stamina), so the runner {_verdict(effective - need_c)}.")
+        before, after = effective - need, effective - need_c
+        if before >= 15:
+            rec = f"not needed: the runner already has enough without {label}; it only adds a safety margin"
+        elif after >= -1:
+            rec = f"yes, get {label}: without it the runner is short or borderline, with it she makes it"
+        else:
+            rec = (f"{label} alone is NOT enough: even with it the runner is still about {-after:.0f} "
+                   "Stamina short, so more Stamina or more recovery is needed")
+        lines.append(f"RECOMMENDATION: {rec}.")
+        data |= {"need_with_candidates": need_c, "margin_with_candidates": after}
+    lines.append(ASSUMPTIONS)
+    return Fact("Is this Stamina enough? (precomputed verdict)", lines, data)
+
+
 def survivable_debuffers(bl: BotLib, course: Course, stamina: float, style: str,
                          recoveries: tuple[float, ...] = (), self_costs: tuple[float, ...] = ()) -> Fact:
     p = _profile(bl, style, course)
@@ -173,14 +278,22 @@ def survivable_debuffers(bl: BotLib, course: Course, stamina: float, style: str,
             f"{r * 100:g}% of max HP (= {r * max_hp:.0f} HP)" for r in recoveries))
     if self_costs:
         lines.append("Self HP costs counted: " + ", ".join(f"{c * 100:g}%" for c in self_costs))
-    whole = max(int(n_pair), 0)
-    need_whole = max(required_stamina(p, whole * pair - sum(recoveries) + sum(self_costs)), 0)
+    lines.append(f"A 'debuffer' = one opponent landing 1 gold debuff (avg {av['gold_debuff'] * 100:.2f}%) "
+                 f"and 1 white debuff (avg {av['white_debuff'] * 100:.2f}%) = {pair * 100:.2f}% of max HP")
+    if budget < 0:
+        need0 = max(required_stamina(p, -sum(recoveries) + sum(self_costs)), 0)
+        lines.append(f"Survives 0 debuffers: even with no debuffs at all, {stamina:g} Stamina is about "
+                     f"{need0 - stamina:.0f} short of the {need0:.0f} needed for a full last spurt")
+    else:
+        whole = int(n_pair)
+        need_whole = max(required_stamina(p, whole * pair - sum(recoveries) + sum(self_costs)), 0)
+        lines += [
+            f"Survives about {n_pair:.1f} debuffers (gold + white each) -> {whole} whole debuffers; "
+            f"{stamina:g} Stamina is {stamina - need_whole:.0f} above the {need_whole:.0f} "
+            f"needed for {whole}",
+            f"If debuffers only land gold debuffs: about {n_gold:.1f}",
+        ]
     lines += [
-        f"A 'debuffer' = one opponent landing 1 gold debuff (avg {av['gold_debuff'] * 100:.2f}%) and "
-        f"1 white debuff (avg {av['white_debuff'] * 100:.2f}%) = {pair * 100:.2f}% of max HP",
-        f"Survives about {n_pair:.1f} debuffers (gold + white each) -> {whole} whole debuffers; "
-        f"{stamina:g} Stamina is {stamina - need_whole:.0f} above the {need_whole:.0f} needed for {whole}",
-        f"If debuffers only land gold debuffs: about {n_gold:.1f}",
         "Stamina needed for N debuffers (gold + white each): "
         + ", ".join(f"{n}: {max(required_stamina(p, n * pair - sum(recoveries) + sum(self_costs)), 0):.0f}"
                     for n in range(0, 6)),

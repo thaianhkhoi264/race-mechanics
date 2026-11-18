@@ -1,0 +1,65 @@
+# Community shorthand for skills. alias (lowercase) -> exact Global skill name.
+# Tier families (◎/○/×) use the base name; the matcher picks ○ unless the user says otherwise.
+#
+# Sources: the uma.guide community glossary (https://uma.guide/guides/glossary) for the entries
+# marked [glossary]; the rest are common forms of the same kind. Acronyms of multi-word names
+# (pttm, oyl, thh, ...) are generated automatically and need no entry here.
+#
+# family: entries resolve to one of several skills by the asker's running style
+# ("subdued" -> "Subdued Late Surgers" for a Late Surger). {styles} is the plural style name.
+
+skills:
+  kfc: A Kiss for Courage                     # [glossary]
+  rodanski: Angling and Scheming              # [glossary]
+  conc: Concentration                         # [glossary]
+  dd: Dodging Danger                          # [glossary]
+  dom: Dominator                              # [glossary]
+  gw: Groundwork                              # [glossary]
+  aw: Ignited Spirit WIT                      # [glossary]
+  aoharu wit: Ignited Spirit WIT              # [glossary]
+  pumpiron: Let's Pump Some Iron!             # [glossary]
+  pump iron: Let's Pump Some Iron!
+  kanata: Moving Past, and Beyond             # [glossary]
+  moving past: Moving Past, and Beyond
+  nsm: No Stopping Me!                        # [glossary]
+  nsg: No Stopping Me!                        # [glossary]
+  cacao: Operation Cacao                      # [glossary]
+  pto: Playtime's Over!                       # [glossary]
+  pp: Prudent Positioning                     # [glossary]
+  poc: Professor of Curvature                 # [glossary]
+  profcurve: Professor of Curvature           # [glossary]
+  prof curve: Professor of Curvature
+  redshift: Red Shift/LP1211-M                # [glossary]
+  red shift: Red Shift/LP1211-M
+  sfv: Shooting for Victory!                  # [glossary]
+  ttl: Taking the Lead                        # [glossary]
+  fortune: Taking the Lead                    # [glossary]
+  ddc: The Duty of Dignity Calls              # [glossary]
+  tddc: The Duty of Dignity Calls             # [glossary]
+  thh: Tail Held High                         # [glossary]
+  stan: Uma Stan                              # [glossary]
+  pedal: Pedal to the Metal
+  swinging: Swinging Maestro
+  maestro: Swinging Maestro
+  curvature: Professor of Curvature
+  slipstream: Slipstream
+  sya: See Ya Later!
+  see ya: See Ya Later!
+  standard distance: Standard Distance
+  std distance: Standard Distance
+  std dist: Standard Distance
+  standard dist: Standard Distance
+  non standard distance: Non-Standard Distance
+  nonstandard distance: Non-Standard Distance
+  non standard: Non-Standard Distance
+  non std: Non-Standard Distance
+  nonstd: Non-Standard Distance
+  right handed: Right-Handed
+  left handed: Left-Handed
+  corner recovery: Corner Recovery
+  straight recovery: Straightaway Recovery
+  straightaway recovery: Straightaway Recovery
+
+families:
+  subdued: "Subdued {styles}"
+  hesitant: "Hesitant {styles}"
