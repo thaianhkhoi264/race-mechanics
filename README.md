@@ -5,10 +5,14 @@ running entirely on your own PC.
 
 The language model never does the maths. Every question goes through three steps:
 
-1. **Understand** (code): skill names (typo tolerant), CM number, running style, Stamina,
-   recovery size, debuffer count. Ambiguities become explicit notes ("0.35 recovery" -> 3.5%).
+1. **Understand** (code): skill names including typos and community shorthand (OYL, PTTM, GW,
+   "kanata", "tokyo" for Tokyo Racecourse), CM number, running style, Stamina, recovery size,
+   counts ("2 subdued"), and intent ("has X" vs "should I buy X"). Ambiguities become explicit
+   notes ("0.35 recovery" -> 3.5%; unspecified tiers -> ○). Aliases live in
+   `racemech/knowledge/aliases.yaml`; acronyms of multi-word skill names are generated.
 2. **Compute and retrieve** (code): skill trigger windows on the CM's course, acceleration
-   ratings, the Stamina/HP model, plus the most relevant passages of a curated mechanics
+   ratings, the Stamina/HP model (green Stamina skills added, named debuffs sized from game data,
+   with/without comparisons and a precomputed verdict and recommendation), plus the most relevant passages of a curated mechanics
    knowledge pack (BM25 keyword search, no model).
 3. **Phrase** (one call to a local model via Ollama), told to use only numbers from that
    context and to say when it doesn't know.

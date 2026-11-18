@@ -17,7 +17,7 @@ _DECLINE = re.compile(
     r"can'?t (?:answer|tell|say|predict|help)|cannot (?:answer|tell|say|predict|help)|unable to|"
     r"no data|isn'?t (?:in|available|known)|not something i|doesn'?t (?:contain|include|exist|mention)|"
     r"does not (?:contain|include|exist|mention)|unknown|not sure|"
-    r"no (?:relevant )?information (?:was )?found", re.I)
+    r"no (?:relevant )?information (?:was )?found|impossible to (?:determine|say|know|predict)", re.I)
 _NUM = re.compile(r"(?<![\w.])-?\d{1,3}(?:,\d{3})+(?:\.\d+)?|(?<![\w.])-?\d+(?:\.\d+)?")
 
 

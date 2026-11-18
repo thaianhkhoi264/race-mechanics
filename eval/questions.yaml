@@ -81,7 +81,7 @@
 - id: cm20-claw-forward
   category: skill
   question: Is Claw Forward good for CM20?
-  keywords: [["great accel"], ["late surger"]]
+  keywords: [["great"], ["late surger"]]
 
 - id: cm21-inherited-moving-past
   category: skill
@@ -161,4 +161,106 @@
 - id: decline-unreleased-cm
   category: decline
   question: What course is CM30 on?
+  decline: true
+
+# ---- Casual wording: shorthand, slang, typos, greens, "should I buy", named debuffs ----
+
+- id: casual-user-example
+  category: casual
+  question: A late surger with 515 stamina in CM 22, has tokyo and standard distance. Should I buy a white recovery skill? Will the uma survive 2 subdued debuff skill?
+  numbers: [{value: 595, tol: 0}, {value: 556, tol: 0}]
+  keywords: [["yes", "should buy", "worth buying", "worth it", "recommend"]]
+
+- id: casual-user-example-rephrased
+  category: casual
+  question: my late surger got 515 sta, tokyo + std distance, cm22. worth getting a white heal if theres 2 subdued?
+  numbers: [{value: 595, tol: 0}, {value: 556, tol: 0}]
+
+- id: casual-pttm
+  category: casual
+  question: is pttm good for my late surger in cm22?
+  numbers: [{value: 1099, tol: 0}]
+  keywords: [["pedal to the metal"]]
+
+- id: casual-oyl
+  category: casual
+  question: oyl worth it for cm20 late?
+  keywords: [["on your left"], ["unreliable"]]
+
+- id: casual-kanata
+  category: casual
+  question: kanata on cm21 good or nah
+  numbers: [{value: 550, tol: 0}, {value: 788, tol: 0}]
+  keywords: [["moving past"]]
+
+- id: casual-swinging-not-enough
+  category: casual
+  question: pace chaser 600 stam cm19, enough? got swinging maestro
+  numbers: [{value: 682, tol: 0}]
+  keywords: [["not enough", "short", "isn't enough", "is not enough", "won't", "not be enough"]]
+
+- id: casual-three-debuffers
+  category: casual
+  question: end closer w/ 700 stam on cm 20, 3 debuffers coming, will i make it
+  numbers: [{value: 1397, tol: 0}]
+  keywords: [["not", "short", "won't", "no"]]
+
+- id: casual-gold-heal-value
+  category: casual
+  question: how much stam is a gold heal worth on cm22 for pace
+  numbers: [{value: 155, tol: 2}]
+
+- id: casual-front-sprint
+  category: casual
+  question: front runner cm21 do i even need stamina lol
+  keywords: [["any stamina", "any amount", "doesn't need", "does not need", "no minimum", "is enough", "not really"]]
+
+- id: casual-groundwork-front
+  category: casual
+  question: should i get groundwork for my front runner in cm22
+  keywords: [["groundwork"], ["3"]]
+
+- id: casual-thh
+  category: casual
+  question: whats thh do in cm 19
+  keywords: [["tail held high"], ["0.15"]]
+
+- id: casual-green-not-active
+  category: casual
+  question: late 520 stam with non standard distance cm22 enough?
+  numbers: [{value: 543, tol: 0}]
+  keywords: [["not activate", "doesn't activate", "does not activate", "not counted", "doesn't apply", "does not apply", "won't activate", "doesn't count"]]
+
+- id: casual-inherited-typo
+  category: casual
+  question: superior heal inheritd worth it cm22 for late surger?
+  numbers: [{value: 89, tol: 2}]
+  keywords: [["3.5", "0.035"]]
+
+- id: casual-how-many-not-enough
+  category: casual
+  question: how many debuffers can my end closer w 800 stamina survive in cm20
+  numbers: [{value: 912, tol: 0}]
+  keywords: [["0", "none", "zero", "not enough", "short"]]
+
+- id: casual-subdued-pace-borderline
+  category: casual
+  question: pace 560 stam cm22, has tokyo, 1 subdued pace chasers, gonna be ok?
+  numbers: [{value: 600, tol: 0}, {value: 607, tol: 0}]
+  keywords: [["borderline", "barely", "short", "not quite", "just under", "slightly"]]
+
+- id: casual-white-heal-not-enough
+  category: casual
+  question: late surger 640 stam cm20 vs 2 debuffers, worth getting a white heal?
+  keywords: [["488"], ["not enough", "short", "isn't enough", "not worth", "no,", "no."]]
+  forbid: ["yes, get", "yes, it is worth", "yes, getting"]
+
+- id: casual-decline-meta
+  category: decline
+  question: whats the meta for cm22 lol, who should i run
+  decline: true
+
+- id: casual-decline-tierlist
+  category: decline
+  question: got a tier list for cm22 umas?
   decline: true
