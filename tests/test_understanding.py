@@ -134,3 +134,9 @@ def test_wit_and_power_values(text, wit, power):
     e = extract(text)
     assert e.wit == wit
     assert e.power == power
+
+
+def test_jp_terms_get_a_global_note():
+    e = extract("what is kakari")
+    assert any('"Rushed"' in n for n in e.notes)
+    assert not extract("what does getting rushed do").notes

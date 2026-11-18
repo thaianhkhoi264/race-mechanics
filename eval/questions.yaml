@@ -315,7 +315,7 @@
 
 - id: general-rushed
   category: general
-  question: whats the deal with kakari, how do i avoid it
+  question: whats the deal with getting rushed, how do i avoid it
   keywords: [["wit"], ["1.6", "60%"]]
 
 - id: general-power-1200
@@ -351,3 +351,20 @@
   category: stats
   question: whats my kakari chance with 600 wit in cm22
   numbers: [{value: 14, tol: 0}]
+
+# ---- Global terminology ----
+
+- id: terms-kakari
+  category: general
+  question: what is kakari
+  keywords: [["rushed"], ["wit"]]
+
+- id: terms-oikomi
+  category: general
+  question: is stamina important for oikomi in cm20
+  keywords: [["end closer"]]
+
+- id: terms-pdm
+  category: general
+  question: whats pdm
+  keywords: [["pace-down", "pace down"]]

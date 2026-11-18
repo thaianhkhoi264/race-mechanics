@@ -229,10 +229,24 @@ def _stat_values(e: Entities, q: str) -> None:
             setattr(e, attr, float(m.group(1)))
 
 
+def _load_terms(path: Path = ALIASES_FILE) -> dict[str, str]:
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) if path.is_file() else {}
+    return {k.lower(): v for k, v in (data.get("terms") or {}).items()}
+
+
+JP_TERMS = _load_terms()
+
+
 def extract(question: str, matcher: SkillMatcher | None = None) -> Entities:
     e = Entities()
     raw = unicodedata.normalize("NFKC", question).lower()
     q = normalise(question)
+
+    for jp, glob in JP_TERMS.items():
+        if re.search(rf"\b{re.escape(jp)}\b", q):
+            e.notes.append(f'The question uses the JP term "{jp}"; the Global term is "{glob}". '
+                           f'Answer with "{glob}" and mention "{jp}" once in brackets, '
+                           f'e.g. "{glob} ({jp} in JP)".')
 
     m = re.search(r"\bcm\s*#?\s*(\d{1,3})\b", q) or re.search(r"champions? meeting\s*#?\s*(\d{1,3})", q)
     if m:
