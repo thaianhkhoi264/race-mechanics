@@ -117,8 +117,8 @@ class BM25:
         return scored[:k]
 
 
-def build_index(bot_repo: Path | None = None) -> BM25:
-    docs = load_markdown_sections()
+def build_index(bot_repo: Path | None = None, exclude: frozenset[str] = frozenset()) -> BM25:
+    docs = [d for d in load_markdown_sections() if d.source not in exclude]
     if bot_repo is not None:
         docs += load_condition_reference(bot_repo)
     return BM25(docs)

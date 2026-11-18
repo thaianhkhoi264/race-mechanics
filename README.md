@@ -35,7 +35,7 @@ The language model never does the maths. Every question goes through three steps
 ```bash
 py -3.14 -m venv .venv
 .venv/Scripts/python -m pip install -e ".[dev,bot]"
-ollama pull qwen3.5:4b-q4_K_M
+ollama pull qwen3.5:9b-q4_K_M
 .venv/Scripts/racemech sync
 ```
 
@@ -50,8 +50,21 @@ racemech ask "How many debuffers does a late surger with 770 stamina survive in 
 racemech ask --show-context "What does Moving Past, and Beyond do in CM21?"
 racemech chat                       # interactive; empty line to quit
 racemech context "..."              # what the model would be given, without calling it
-racemech ask --model qwen3.5:9b-q4_K_M "..."
+racemech ask --model qwen3.5:4b-q4_K_M "..."   # smaller, faster, less accurate
 ```
+
+By default the whole race mechanics doc (`racemech/knowledge/mechanics.md`, ~5k tokens) is part of
+the system prompt, so every mechanics question can use all of it; Ollama reuses that fixed prefix,
+so it costs well under a second per question. Keyword search still supplies skill, strategy,
+glossary and condition-field passages. `full_mechanics = false` switches back to searching the
+mechanics doc too.
+
+| Setup (125-question eval, 2 runs) | Passed | Coverage (58) | Median s |
+|---|---|---|---|
+| 4B, search only | 112 | 49 | 3.0 |
+| 9B, search only | 119 | 54 | 3.5 |
+| 4B, whole doc | 121 / 117 | 54 / 51 | 3.4 |
+| **9B, whole doc (default)** | **121 / 122** | **56 / 57** | 3.7 |
 
 If Ollama isn't running the commands print an "unavailable" message instead of answering.
 

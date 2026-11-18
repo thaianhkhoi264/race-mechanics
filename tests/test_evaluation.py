@@ -29,3 +29,8 @@ def test_question_file_is_well_formed():
     ids = [q["id"] for q in qs]
     assert len(ids) == len(set(ids)) >= 25
     assert all(q["question"].strip() for q in qs)
+
+
+def test_multiplier_numbers_are_parsed():
+    assert numbers_in("target speed x0.915 otherwise; 1.6x; ab1") == [0.915, 1.6]
+    assert unsupported("drops to 91.5% of normal", "target speed x0.915 otherwise", "") == []

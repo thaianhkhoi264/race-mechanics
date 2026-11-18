@@ -28,8 +28,9 @@ class Reply:
 
 class OllamaClient:
     def __init__(self, url: str, model: str, timeout_s: float = 120.0, keep_alive: str = "5m",
-                 temperature: float = 0.2):
+                 temperature: float = 0.2, num_ctx: int = 8192):
         self.url = url.rstrip("/")
+        self.num_ctx = num_ctx
         self.model = model
         self.timeout_s = timeout_s
         self.keep_alive = keep_alive
@@ -58,7 +59,7 @@ class OllamaClient:
             "stream": False,
             "think": False,               # Qwen3.5 thinking adds latency; the context already has the maths
             "keep_alive": self.keep_alive,
-            "options": {"temperature": self.temperature, "num_ctx": 8192},
+            "options": {"temperature": self.temperature, "num_ctx": self.num_ctx},
         }
         start = time.perf_counter()
         data = self._post("/api/chat", payload, self.timeout_s)

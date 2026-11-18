@@ -368,3 +368,64 @@
   category: general
   question: whats pdm
   keywords: [["pace-down", "pace down"]]
+
+# ---- Coverage: one question per mechanics.md section (#31) ----
+
+- {id: cov-sections, category: coverage, question: how many sections is a race split into, keywords: [["24"]]}
+- {id: cov-late-race-start, category: coverage, question: where does late race start on a course, keywords: [["2/3", "two thirds", "2d/3", "two-thirds"]]}
+- {id: cov-length-metres, category: coverage, question: how many meters is one length, keywords: [["2.5"]]}
+- {id: cov-course-width, category: coverage, question: how wide is a lane, keywords: [["11.25", "1/18", "18"]]}
+- {id: cov-stats-over-1200, category: coverage, question: do stats over 1200 count fully, keywords: [["half"]]}
+- {id: cov-mood, category: coverage, question: how much does mood change my stats in a race, keywords: [["1.04", "4%"]]}
+- {id: cov-heavy-ground, category: coverage, question: what does heavy ground do to my stats, keywords: [["50"]]}
+- {id: cov-base-speed, category: coverage, question: what is base speed on a 2400m race, keywords: [["20.0 - (distance - 2000) / 1000", "19.6", "distance"]]}
+- {id: cov-target-speed-cap, category: coverage, question: whats the max target speed a horse can have, keywords: [["30"]]}
+- {id: cov-strategy-coef, category: coverage, question: are end closers slower in the early race, keywords: [["0.931"]]}
+- {id: cov-distance-aptitude, category: coverage, question: how much does S distance aptitude help speed, keywords: [["1.05"]]}
+- {id: cov-random-speed, category: coverage, question: is there randomness in speed each section, keywords: [["wit"], ["0.65", "random"]]}
+- {id: cov-spurt-plan, category: coverage, question: when is the last spurt decided, keywords: [["mid-race", "mid race", "middle"]]}
+- {id: cov-spurt-candidates, category: coverage, question: what happens if i dont have enough hp for a full spurt, keywords: [["0.1", "slower"]]}
+- {id: cov-spurt-60m, category: coverage, question: does the spurt hp estimate go to the finish line, keywords: [["60"]]}
+- {id: cov-min-speed, category: coverage, question: what is minimum speed, keywords: [["0.85"]]}
+- {id: cov-accel-formula, category: coverage, question: how is acceleration calculated, keywords: [["power"], ["0.0006", "sqrt"]]}
+- {id: cov-start-dash, category: coverage, question: how fast do horses accelerate at the start, keywords: [["24", "start dash"]]}
+- {id: cov-deceleration, category: coverage, question: how fast do you slow down in mid race, keywords: [["0.8"]]}
+- {id: cov-current-vs-target, category: coverage, question: whats the difference between current speed and target speed skills, keywords: [["instant", "immediately"]]}
+- {id: cov-stacking, category: coverage, question: if i have two 0.35 speed skills at once what do i get, keywords: [["0.7"]]}
+- {id: cov-hp-formula, category: coverage, question: how much hp do i start with, keywords: [["0.8"], ["distance"]]}
+- {id: cov-style-hp, category: coverage, question: which running style gets the most hp from stamina, keywords: [["late surger"]]}
+- {id: cov-hp-drain, category: coverage, question: does running faster drain more hp, keywords: [["yes", "more"]]}
+- {id: cov-guts-drain, category: coverage, question: how much does 600 guts reduce late race hp drain, keywords: [["1.333"]]}
+- {id: cov-speed-zenkai, category: coverage, question: what happens over 2000 speed, keywords: [["zenkai"]]}
+- {id: cov-stamina-lb, category: coverage, question: does stamina over 1200 do anything, keywords: [["limit break"]]}
+- {id: cov-power-lanes, category: coverage, question: does power help with changing lanes, keywords: [["yes", "faster"]]}
+- {id: cov-wit-late-start, category: coverage, question: does wit help with late starts, keywords: [["no", "not", "doesn't", "does not"]]}
+- {id: cov-debuff-teammates, category: coverage, question: can my debuffs hit my teammates, keywords: [["never", "no", "not", "cannot", "can't"]]}
+- {id: cov-uphill, category: coverage, question: how much do uphills slow me down, keywords: [["200"], ["power"]]}
+- {id: cov-wit-check-base, category: coverage, question: does strategy aptitude change skill activation chance, keywords: [["no", "not", "doesn't", "does not"]]}
+- {id: cov-duration, category: coverage, question: how long does a 4 second skill last on 2500m, keywords: [["10"]]}
+- {id: cov-skill-level, category: coverage, question: how much stronger is a level 5 speed skill, keywords: [["1.10", "1.1", "10%"]]}
+- {id: cov-straight-random, category: coverage, question: how does straight random pick where a skill fires, keywords: [["equal", "same chance", "regardless"]]}
+- {id: cov-skill-order, category: coverage, question: in what order are skills checked each frame, keywords: [["id"]]}
+- {id: cov-near, category: coverage, question: what counts as near another horse for skills, keywords: [["3 m", "3m", "3 meters", "3 metres"]]}
+- {id: cov-block, category: coverage, question: when am i blocked from the front, keywords: [["2 m", "2m", "2 meters", "2 metres"]]}
+- {id: cov-vision, category: coverage, question: how far ahead can a horse see, keywords: [["20"]]}
+- {id: cov-overtake-target, category: coverage, question: what is an overtake target, keywords: [["15"], ["20"]]}
+- {id: cov-late-start, category: coverage, question: what counts as a late start, keywords: [["0.08"]]}
+- {id: cov-concentration, category: coverage, question: what does concentration do to the start delay, keywords: [["0.4"]]}
+- {id: cov-pk-band, category: coverage, question: how far behind the leader do pace chasers try to stay, keywords: [["3.0", "3 to 5", "3-5", "3.0 to 5.0"]]}
+- {id: cov-pace-up, category: coverage, question: what is pace up mode, keywords: [["1.04"]]}
+- {id: cov-speed-up-front, category: coverage, question: how does a front runner speed up mode work, keywords: [["4.5"], ["1.04"]]}
+- {id: cov-pace-up-ex, category: coverage, question: when does pace up ex happen, keywords: [["2.0", "2x", "double"]]}
+- {id: cov-out-of-hp, category: coverage, question: how fast do you slow down when out of hp, keywords: [["1.2"]]}
+- {id: cov-rushed-calm, category: coverage, question: how long does being rushed last, keywords: [["12"]]}
+- {id: cov-spot-struggle, category: coverage, question: what is a spot struggle, keywords: [["guts"], ["front"]]}
+- {id: cov-showdown, category: coverage, question: what is a showdown on the final straight, keywords: [["guts"]]}
+- {id: cov-conserve-power, category: coverage, question: what does power over 1200 do in the last spurt, keywords: [["acceleration"]]}
+- {id: cov-compete-spurt, category: coverage, question: what is compete before spurt, keywords: [["11", "section"]]}
+- {id: cov-stamina-keep, category: coverage, question: what is stamina keep mode, keywords: [["1.035", "1.04"]]}
+- {id: cov-secure-lead, category: coverage, question: what is secure lead, keywords: [["20%"]]}
+- {id: cov-stamina-lb-distance, category: coverage, question: does stamina limit break work on a 2000m race, keywords: [["no", "not", "doesn't", "does not", "2101", " 0"]]}
+- {id: cov-wit-lb, category: coverage, question: what is wit limit break, keywords: [["1200"], ["gold", "unique"]]}
+- {id: cov-finish-time, category: coverage, question: why do race times look slower than real time, keywords: [["1.18"]]}
+- {id: cov-margins, category: coverage, question: how long is a nose margin, keywords: [["0.2"]]}

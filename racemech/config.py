@@ -27,18 +27,25 @@ class Settings:
         r"\UmamusumePrettyDerby_Data\Persistent\master\master.mdb")
     jp_master: Path = Path(r"<path to the JP client's master.mdb>")
     ollama_url: str = "http://localhost:11434"
-    model: str = "qwen3.5:4b-q4_K_M"
+    model: str = "qwen3.5:9b-q4_K_M"
     # Seconds to wait for the model before reporting it unavailable.
     timeout_s: float = 120.0
     # How long Ollama keeps the model in VRAM after a request (frees the GPU when idle).
     keep_alive: str = "5m"
     temperature: float = 0.2
     retrieval_k: int = 5
+    # Put the whole race mechanics doc in the system prompt (a fixed prefix Ollama can reuse)
+    # instead of retrieving mechanics sections per question.
+    full_mechanics: bool = True
+    # Model context window in tokens.
+    num_ctx: int = 16384
 
 
 def _coerce(raw, default):
     if isinstance(default, Path):
         return Path(raw)
+    if isinstance(default, bool):
+        return raw if isinstance(raw, bool) else str(raw).strip().lower() in ("1", "true", "yes", "on")
     if isinstance(default, float):
         return float(raw)
     if isinstance(default, int):

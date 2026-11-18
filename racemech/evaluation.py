@@ -18,7 +18,9 @@ _DECLINE = re.compile(
     r"no data|isn'?t (?:in|available|known)|not something i|doesn'?t (?:contain|include|exist|mention)|"
     r"does not (?:contain|include|exist|mention)|unknown|not sure|"
     r"no (?:relevant )?information (?:was )?found|impossible to (?:determine|say|know|predict)", re.I)
-_NUM = re.compile(r"(?<![\w.])-?\d{1,3}(?:,\d{3})+(?:\.\d+)?|(?<![\w.])-?\d+(?:\.\d+)?")
+# A number not glued to a word, except a multiplier written "x0.915".
+_START = r"(?:(?<![\w.])|(?<=\bx))"
+_NUM = re.compile(_START + r"-?\d{1,3}(?:,\d{3})+(?:\.\d+)?|" + _START + r"-?\d+(?:\.\d+)?")
 
 
 def numbers_in(text: str) -> list[float]:
@@ -87,7 +89,7 @@ def run(assistant, questions: list[dict], only: set[str] | None = None, echo=pri
             continue
         t0 = time.perf_counter()
         ans = assistant.ask(q["question"])
-        sc = score(q, ans.reply.text, ans.context.render())
+        sc = score(q, ans.reply.text, ans.context.render() + getattr(assistant, "reference", ""))
         sc.seconds = time.perf_counter() - t0
         scores.append(sc)
         flag = "PASS" if sc.passed else "FAIL"

@@ -15,6 +15,12 @@ def system_prompt() -> str:
     return resources.files("racemech").joinpath("prompts/system.md").read_text(encoding="utf-8")
 
 
+def mechanics_reference() -> str:
+    doc = resources.files("racemech").joinpath("knowledge/mechanics.md").read_text(encoding="utf-8")
+    return ("\n\nRACE MECHANICS REFERENCE (part of the CONTEXT for every question; quote its numbers "
+            "as written)\n\n" + doc)
+
+
 @dataclass
 class Answer:
     question: str
@@ -26,10 +32,13 @@ class Assistant:
     def __init__(self, settings: Settings, model: str | None = None):
         self.settings = settings
         self.botlib = BotLib(settings.bot_repo, settings.data_dir).load()
-        self.builder = ContextBuilder(self.botlib, build_index(settings.bot_repo), settings.retrieval_k)
+        exclude = frozenset({"mechanics"}) if settings.full_mechanics else frozenset()
+        index = build_index(settings.bot_repo, exclude)
+        self.builder = ContextBuilder(self.botlib, index, settings.retrieval_k)
         self.client = OllamaClient(settings.ollama_url, model or settings.model, settings.timeout_s,
-                                   settings.keep_alive, settings.temperature)
-        self.system = system_prompt()
+                                   settings.keep_alive, settings.temperature, settings.num_ctx)
+        self.reference = mechanics_reference() if settings.full_mechanics else ""
+        self.system = system_prompt() + self.reference
 
     def ask(self, question: str) -> Answer:
         ctx = self.builder.build(question)
