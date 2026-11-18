@@ -33,7 +33,7 @@ class Settings:
     # How long Ollama keeps the model in VRAM after a request (frees the GPU when idle).
     keep_alive: str = "5m"
     temperature: float = 0.2
-    retrieval_k: int = 4
+    retrieval_k: int = 5
 
 
 def _coerce(raw, default):

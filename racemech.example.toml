@@ -11,4 +11,4 @@ model = "qwen3.5:4b-q4_K_M"
 timeout_s = 120
 keep_alive = "5m"
 temperature = 0.2
-retrieval_k = 4
+retrieval_k = 5
