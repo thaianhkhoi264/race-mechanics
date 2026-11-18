@@ -6,6 +6,7 @@ straight into the model's context, and the raw values for tests.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from racemech.botlib import BotLib, Course
@@ -56,11 +57,31 @@ def skill_on_course(bl: BotLib, sid: str, course: Course) -> Fact:
         if info["arms"]:
             lines.append(f"Precondition (must happen first): {info['arms']}")
         if info["timing"]:
-            lines.append(f"Timing relative to late-race: {info['timing']}")
+            lines.append(f"Timing: {clear_timing(info['timing'])}")
         if info["rating"]:
             verdict = _accel_verdict(bl, sid, entry, course)
             lines.append(f"Acceleration rating on this course: {verdict or info['rating']}")
     return Fact(f"Skill: {name}", lines, {"info": info, "sid": sid})
+
+
+_TIMING = re.compile(r"^(?P<lead>.*?) (?P<off>[\d,]+) m (?P<dir>before late-race|after late-race starts) "
+                     r"\((?P<p2>[\d,]+) m\)$")
+
+
+def clear_timing(text: str) -> str:
+    """
+    Reword the bot's timing note so a small model can't misread the bracketed number as an offset:
+    "Activates 250 m before late-race (800 m)" ->
+    "late-race starts at 800 m; activates 250 m before that point".
+    """
+    m = _TIMING.match(text)
+    if m:
+        where = "before that point" if m["dir"].startswith("before") else "after that point"
+        return f"late-race starts at {m['p2']} m; {m['lead'].lower()} {m['off']} m {where}"
+    m = re.match(r"^(.*?) \(([\d,]+) m\)$", text)
+    if m:
+        return f"{m[1]} (late-race starts at {m[2]} m)"
+    return text
 
 
 def _accel_verdict(bl: BotLib, sid: str, entry: dict, course: Course) -> str | None:
