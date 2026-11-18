@@ -17,7 +17,8 @@ def build_parser() -> argparse.ArgumentParser:
     sub = p.add_subparsers(dest="command")
     sub.add_parser("config", help="print the effective settings")
     sync = sub.add_parser("sync", help="copy the game databases and refresh course geometry")
-    sync.add_argument("--offline", action="store_true", help="skip the course geometry download")
+    sync.add_argument("--offline", action="store_true",
+                      help="skip the course geometry and CM timeline downloads")
 
     for name, help_ in (("ask", "answer one question"), ("chat", "ask questions interactively")):
         sp = sub.add_parser(name, help=help_)

@@ -5,11 +5,16 @@ Refresh this project's local data.
    ``<data_dir>/game/``. Copies mean a running or patching game is never touched; this
    is the source of skills, names, track names and the released Champions Meeting list.
 2. Download course geometry (corners, straights, slopes) from community skill data. The game
-   keeps geometry in asset bundles, not in master.mdb, so this is the only online fetch;
-   the file is cached and only changes when new racecourses are added.
+   keeps geometry in asset bundles, not in master.mdb; the file is cached and only changes
+   when new racecourses are added.
+3. Download the events timeline (the same one bot_repo reads), cached locally, for
+   Champions Meetings that are announced or predicted but not in the Global game data yet.
+
+Answering questions never goes online; it only reads these cached files.
 """
 from __future__ import annotations
 
+import gzip
 import shutil
 import urllib.request
 from pathlib import Path
@@ -17,6 +22,17 @@ from pathlib import Path
 from racemech.gamedata import game_dir
 
 COURSE_DATA_URL = "<course data URL>"
+CM_TIMELINE_URL = "<events timeline URL>"
+
+
+def cm_timeline_path(data_dir: Path) -> Path:
+    return data_dir / "cm_timeline.json"
+
+
+def _write_atomic(dest: Path, body: bytes) -> None:
+    tmp = dest.with_suffix(dest.suffix + ".tmp")
+    tmp.write_bytes(body)
+    tmp.replace(dest)
 
 
 def course_data_path(data_dir: Path) -> Path:
@@ -53,4 +69,14 @@ def sync(data_dir: Path, global_master: Path, jp_master: Path | None,
         tmp.write_bytes(body)
         tmp.replace(dest)
         out.append(("course_data.json", f"{len(body):,} bytes (downloaded)"))
+
+        req = urllib.request.Request(CM_TIMELINE_URL, headers={"User-Agent": "racemech"})
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = resp.read()
+        try:
+            raw = gzip.decompress(raw)
+        except OSError:
+            pass                       # served already decompressed
+        _write_atomic(cm_timeline_path(data_dir), raw)
+        out.append(("cm_timeline.json", f"{len(raw):,} bytes (downloaded)"))
     return out
