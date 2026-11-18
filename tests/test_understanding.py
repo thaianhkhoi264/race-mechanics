@@ -140,3 +140,9 @@ def test_jp_terms_get_a_global_note():
     e = extract("what is kakari")
     assert any('"Rushed"' in n for n in e.notes)
     assert not extract("what does getting rushed do").notes
+
+
+def test_alias_match_explains_itself(matcher):
+    e = extract("kanata on cm21 good or nah", matcher)
+    assert any("shorthand for the skill Moving Past, and Beyond" in n for n in e.notes)
+    assert not extract("is moving past and beyond good", matcher).notes

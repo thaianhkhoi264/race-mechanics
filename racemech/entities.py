@@ -147,7 +147,11 @@ class SkillMatcher:
                     continue
                 span = " ".join(words[i:i + size])
                 if span in self.phrases:
-                    claim(i, i + size, self.phrases[span], 100.0, "exact")
+                    base = self.phrases[span]
+                    claim(i, i + size, base, 100.0, "exact")
+                    if normalise(base) != span and found[-1].note is None:
+                        found[-1].note = (f'"{span}" is community shorthand for the skill {base} '
+                                          "(a skill, not a character)")
                 elif span in self.style_families and styles:
                     name = self.style_families[span].format(styles=STYLE_PLURAL[styles[0]])
                     if name in self.families:
