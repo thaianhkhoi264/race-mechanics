@@ -306,7 +306,7 @@
 - id: general-downhill
   category: general
   question: how does downhill accel mode help
-  keywords: [["0.04"], ["60%", "0.4"]]
+  keywords: [["wit"], ["60%", "0.4"]]
 
 - id: general-guts-front
   category: general
@@ -316,9 +316,38 @@
 - id: general-rushed
   category: general
   question: whats the deal with kakari, how do i avoid it
-  keywords: [["wit"], ["1.6"]]
+  keywords: [["wit"], ["1.6", "60%"]]
 
 - id: general-power-1200
   category: general
   question: what does power over 1200 do
   keywords: [["conserve", "release"]]
+
+# ---- Course-specific stat calculator (Wit / Power) ----
+
+- id: stat-wit-cm21
+  category: stats
+  question: other than skills, how much does wit matter in cm21
+  keywords: [["downhill"], ["stamina", "hp"]]
+
+- id: stat-wit-value-cm22
+  category: stats
+  question: late surger 900 wit cm22, how much does wit help
+  keywords: [["downhill"]]
+  numbers: [{value: 95, tol: 0}]
+
+- id: stat-power-cm20
+  category: stats
+  question: does power matter for the hills in cm20
+  keywords: [["uphill", "hill", "slope"]]
+  numbers: [{value: 6.3, tol: 0.05}]
+
+- id: stat-power-750-cm19
+  category: stats
+  question: is 750 power enough for cm19 hills?
+  numbers: [{value: 5.7, tol: 0.05}]
+
+- id: stat-wit-rush-cm22
+  category: stats
+  question: whats my kakari chance with 600 wit in cm22
+  numbers: [{value: 14, tol: 0}]

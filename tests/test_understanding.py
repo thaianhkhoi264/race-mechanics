@@ -122,3 +122,15 @@ def test_aliases_in_tokenizer():
 def test_retrieval_finds_the_right_section(question, title_word):
     hits = build_index().search(question, 3)
     assert any(title_word in d.title.lower() for _, d in hits)
+
+
+@pytest.mark.parametrize("text,wit,power", [
+    ("late surger 900 wit cm22, how much does wit help", 900, None),
+    ("is 750 power enough for cm19", None, 750),
+    ("wit 1100 pow 1000 pace chaser", 1100, 1000),
+    ("what does wit do in cm21", None, None),
+])
+def test_wit_and_power_values(text, wit, power):
+    e = extract(text)
+    assert e.wit == wit
+    assert e.power == power

@@ -9,6 +9,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from racemech import stats
 from racemech.botlib import BotLib, Course
 
 STYLES = ("front", "pace", "late", "end")
@@ -301,3 +302,112 @@ def survivable_debuffers(bl: BotLib, course: Course, stamina: float, style: str,
     ]
     return Fact("Debuffers survivable", lines, {"pair": n_pair, "gold": n_gold, "white": n_white,
                                                  "spare": spare})
+
+
+# ---------------------------------------------------------------- Wit / Power
+
+def _levels(given: float | None, defaults: tuple[float, ...]) -> list[float]:
+    if given is None:
+        return list(defaults)
+    return [given] + [d for d in (1200.0,) if d != given]
+
+
+def _slopes(course: Course) -> tuple[list[dict], list[dict]]:
+    slopes = [s for s in course.entry.get("slopes", []) if s.get("slope")]
+    return [s for s in slopes if s["slope"] > 0], [s for s in slopes if s["slope"] < 0]
+
+
+def _hill(s: dict) -> str:
+    return f"{s['start']:.0f}-{s['start'] + s['length']:.0f} m ({abs(s['slope']) / stats.SLOPE_SCALE:g}%)"
+
+
+def wit_on_course(bl: BotLib, course: Course, wit: float | None = None,
+                  styles: tuple[str, ...] = STYLES) -> Fact:
+    """What Wit does on this course, at the given Wit or at 600/900/1200 for comparison."""
+    d = float(course.entry["distance"])
+    pk_end = d * 10 / 24
+    _, down = _slopes(course)
+    down_m = sum(s["length"] for s in down)
+    lines = [f"Course: {course.display}",
+             f"Position keeping (pace-up / pace-down, Front Runner speed-up) runs in sections 1-10 = "
+             f"0-{pk_end:.0f} m of this {d:.0f} m course."]
+    data: dict = {"pk_end": pk_end, "downhill_m": down_m, "levels": {}}
+    for w in _levels(wit, (600.0, 900.0, 1200.0)):
+        lo, hi = stats.section_random_pct(w)
+        row = {"activation": stats.skill_activation_pct(w), "rushed": stats.rushed_pct(w),
+               "pace_up": stats.pace_up_check_pct(w), "front": stats.front_check_pct(w),
+               "random": (lo, hi), "downhill_share": stats.downhill_mode_share(w)}
+        data["levels"][w] = row
+        lines.append(
+            f"At {w:g} Wit: skill activation {row['activation']:.1f}%; rushed chance {row['rushed']:.0f}%; "
+            f"pace-up check {row['pace_up']:.1f}% (Front Runner speed-up/overtake {row['front']:.1f}%) "
+            f"every 2 s; random speed per section {lo:+.3f}% to {hi:+.3f}% of base speed"
+            + (f"; downhill accel mode entry chance {w * 0.04:.0f}% per second, in the mode "
+               f"{row['downhill_share'] * 100:.1f}% of downhill time" if down else ""))
+    if down:
+        lines.append(f"Downhills: {', '.join(_hill(s) for s in down)} = {down_m:.0f} m in total.")
+        for s in styles:
+            p = _profile(bl, s, course)
+            base_rate = p["r"].get("downhill_mode_rate") or 0
+            if not base_rate:
+                continue
+            parts, eq = [], {}
+            for w in data["levels"]:
+                saved = p["r"]["downhill_savings"] * stats.downhill_mode_share(w) / base_rate
+                eq[w] = saved / (0.8 * p["coef"])
+                parts.append(f"{w:g} Wit saves {saved:.0f} HP (= {eq[w]:.0f} Stamina)")
+            data.setdefault("stamina_eq", {})[s] = eq
+            lines.append(f"{STYLE_NAME[s]} downhill HP saved: " + "; ".join(parts))
+        base_wit = bl.stamina.DISTANCE_STATS.get(course.entry.get("distanceType", 3),
+                                                 bl.stamina.DISTANCE_STATS[3])["wit"]
+        lines.append(f"HP saved is compared with never entering downhill accel mode. The minimum-Stamina "
+                     f"figures elsewhere already assume {base_wit} Wit on this course.")
+    else:
+        lines.append("This course has no downhills, so Wit gives no downhill HP savings here.")
+    lines.append("Wit check values use Strategy aptitude A; skill activation uses base Wit.")
+    general = ("skill activation, rushed chance, position keeping checks and section randomness work "
+               "the same on every course")
+    eqs = data.get("stamina_eq")
+    if eqs:
+        who = STYLE_NAME[next(iter(eqs))] if len(eqs) == 1 else "depending on running style"
+
+        def span(w: float) -> str:
+            vals = [e[w] for e in eqs.values()]
+            lo, hi = min(vals), max(vals)
+            return f"{lo:.0f}" if round(lo) == round(hi) else f"{lo:.0f}-{hi:.0f}"
+        ws = sorted(data["levels"])
+        summary = (f"SUMMARY for this course: the course-specific part of Wit is the {down_m:.0f} m of "
+                   f"downhill ({down_m / d * 100:.0f}% of the race). The HP saved there is worth "
+                   f"{span(ws[0])} Stamina at {ws[0]:g} Wit and {span(ws[-1])} Stamina at {ws[-1]:g} Wit "
+                   f"({who}). Otherwise {general}.")
+    else:
+        summary = ("SUMMARY for this course: no downhills, so nothing about Wit is course-specific; "
+                   f"{general}.")
+    data["summary"] = summary
+    return Fact("What Wit does on this course (computed)", lines, data)
+
+
+def power_on_course(bl: BotLib, course: Course, power: float | None = None) -> Fact:
+    """Uphill slowdown on this course for the given Power, or 800/1000/1200 for comparison."""
+    d = float(course.entry["distance"])
+    up, _ = _slopes(course)
+    v = stats.base_speed(d)
+    lines = [f"Course: {course.display}"]
+    data: dict = {"uphill_m": sum(s["length"] for s in up), "levels": {}}
+    if not up:
+        lines.append("This course has no uphills, so Power does not reduce any hill slowdown here; "
+                     "Power still sets acceleration and lane-change speed.")
+        return Fact("What Power does on this course (computed)", lines, data)
+    lines.append(f"Uphills: {', '.join(_hill(s) for s in up)} = {data['uphill_m']:.0f} m in total "
+                 f"(base speed on this course {v:.1f} m/s).")
+    for pw in _levels(power, (800.0, 1000.0, 1200.0)):
+        parts, lost = [], 0.0
+        for s in up:
+            loss = stats.uphill_loss(s["slope"], pw)
+            lost += s["length"] / v * loss
+            parts.append(f"-{loss:.3f} m/s on {s['start']:.0f}-{s['start'] + s['length']:.0f} m")
+        data["levels"][pw] = lost
+        lines.append(f"At {pw:g} Power: " + "; ".join(parts)
+                     + f"; about {lost:.1f} m lost over all uphills ({lost / 2.5:.2f} lengths)")
+    lines.append("Distance lost = time on the hill x speed loss (an estimate; acceleration not modelled).")
+    return Fact("What Power does on this course (computed)", lines, data)

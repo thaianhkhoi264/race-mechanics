@@ -56,6 +56,8 @@ class Entities:
     cm: int | None = None
     styles: list[str] = field(default_factory=list)
     stamina: float | None = None
+    wit: float | None = None
+    power: float | None = None
     recoveries: list[float] = field(default_factory=list)            # owned, fractions of max HP
     candidate_recoveries: list[float] = field(default_factory=list)  # "should I buy a white recovery"
     debuffers: int | None = None
@@ -207,6 +209,26 @@ def _sentence_of(q: str, phrase: str) -> str:
     return q[start:pos]
 
 
+_STAT_VALUE_WORDS = {"wit": r"wit|wis|wisdom|int", "power": r"power|pow|pwr"}
+
+
+def _stat_values(e: Entities, q: str) -> None:
+    """Wit/Power values. "900 wit" and "wit 900" both work; in a list like "wit 1100 pow 1000"
+    the order of the first stat mention decides, so 1100 is not read as Power."""
+    num_first = {a: re.search(rf"(\d{{3,4}})\s*(?:{w})\b", q) for a, w in _STAT_VALUE_WORDS.items()}
+    word_first = {a: re.search(rf"\b(?:{w})\s*(?:of|at|is|=|:)?\s*(\d{{3,4}})\b", q)
+                  for a, w in _STAT_VALUE_WORDS.items()}
+    starts = [(m.start(), "num") for m in num_first.values() if m]
+    starts += [(m.start(), "word") for m in word_first.values() if m]
+    if not starts:
+        return
+    first, second = (word_first, num_first) if min(starts)[1] == "word" else (num_first, word_first)
+    for attr in _STAT_VALUE_WORDS:
+        m = first[attr] or second[attr]
+        if m:
+            setattr(e, attr, float(m.group(1)))
+
+
 def extract(question: str, matcher: SkillMatcher | None = None) -> Entities:
     e = Entities()
     raw = unicodedata.normalize("NFKC", question).lower()
@@ -226,6 +248,8 @@ def extract(question: str, matcher: SkillMatcher | None = None) -> Entities:
          or re.search(r"\b(?:stamina|stam)\s*(?:of|at|is|=|:)?\s*(\d{3,4})\b", q))
     if m:
         e.stamina = float(m.group(1))
+
+    _stat_values(e, q)
 
     m = re.search(r"(\d+|one|two|three|four|five)\s*debuffers?\b", q)
     if m:
