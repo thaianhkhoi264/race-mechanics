@@ -6,6 +6,7 @@ straight into the model's context, and the raw values for tests.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from racemech.botlib import BotLib, Course
@@ -16,8 +17,8 @@ STYLE_NAME = {"front": "Front Runner", "pace": "Pace Chaser", "late": "Late Surg
 ASSUMPTIONS = (
     "Stamina model assumptions: stats by distance type (Sprint/Mile: Speed 1600, Power 1201, Guts 600, "
     "Wit 1200; Medium: 1500/1100/600/1100; Long: 1400/1000/600/1000), Grade A distance aptitude, not rushed, "
-    "downhill accel savings included. Debuff/recovery sizes are percentages of max HP. "
-    "Calibrated against umalator's HP calculator (Late Surger, Kyoto 2200m, Speed 1500, Guts 600 -> 888)."
+    "course slopes and downhill accel savings included. Debuff/recovery sizes are percentages of max HP. "
+    "The HP formulas follow umalator's HP calculator."
 )
 
 
@@ -56,10 +57,41 @@ def skill_on_course(bl: BotLib, sid: str, course: Course) -> Fact:
         if info["arms"]:
             lines.append(f"Precondition (must happen first): {info['arms']}")
         if info["timing"]:
-            lines.append(f"Timing relative to late-race: {info['timing']}")
+            lines.append(f"Timing: {clear_timing(info['timing'])}")
         if info["rating"]:
-            lines.append(f"Acceleration rating on this course: {info['rating']}")
+            verdict = _accel_verdict(bl, sid, entry, course)
+            lines.append(f"Acceleration rating on this course: {verdict or info['rating']}")
     return Fact(f"Skill: {name}", lines, {"info": info, "sid": sid})
+
+
+_TIMING = re.compile(r"^(?P<lead>.*?) (?P<off>[\d,]+) m (?P<dir>before late-race|after late-race starts) "
+                     r"\((?P<p2>[\d,]+) m\)$")
+
+
+def clear_timing(text: str) -> str:
+    """
+    Reword the bot's timing note so a small model can't misread the bracketed number as an offset:
+    "Activates 250 m before late-race (800 m)" ->
+    "late-race starts at 800 m; activates 250 m before that point".
+    """
+    m = _TIMING.match(text)
+    if m:
+        where = "before that point" if m["dir"].startswith("before") else "after that point"
+        return f"late-race starts at {m['p2']} m; {m['lead'].lower()} {m['off']} m {where}"
+    m = re.match(r"^(.*?) \(([\d,]+) m\)$", text)
+    if m:
+        return f"{m[1]} (late-race starts at {m[2]} m)"
+    return text
+
+
+def _accel_verdict(bl: BotLib, sid: str, entry: dict, course: Course) -> str | None:
+    """The bot's full verdict sentence (rating, potency, and why it was downgraded)."""
+    d = bl.describe
+    for alt in entry["alternatives"]:
+        cond, pre = alt.get("condition", ""), alt.get("precondition", "")
+        if d.evaluate_trigger(cond, pre, course.entry):
+            return d.accel_verdict(cond, pre, alt["effects"], course.entry, sid.startswith("9"))
+    return None
 
 
 # -------------------------------------------------------------------- stamina
@@ -92,9 +124,13 @@ def stamina_baseline(bl: BotLib, course: Course, styles=STYLES) -> Fact:
     for s in styles:
         p = _profile(bl, s, course)
         dh, no_dh = p["r"]["min_stamina_dh"], p["r"]["min_stamina"]
-        data[s] = dh
-        lines.append(f"{STYLE_NAME[s]}: minimum Stamina for a full last spurt = {dh:.0f} "
-                     f"({no_dh:.0f} without downhill savings), no debuffs and no recovery skills")
+        data[s] = max(dh, 0.0)
+        if dh <= 0:
+            lines.append(f"{STYLE_NAME[s]}: any Stamina is enough for a full last spurt on this course "
+                         "(the course distance alone covers the HP needed), with no debuffs")
+        else:
+            lines.append(f"{STYLE_NAME[s]}: minimum Stamina for a full last spurt = {dh:.0f} "
+                         f"({max(no_dh, 0):.0f} without downhill savings), no debuffs and no recovery skills")
     lines.append(ASSUMPTIONS)
     return Fact("Minimum Stamina for full spurt", lines, data)
 
@@ -133,16 +169,20 @@ def survivable_debuffers(bl: BotLib, course: Course, stamina: float, style: str,
         f"spare HP {spare * 100:.1f}% of max",
     ]
     if recoveries:
-        lines.append("Recovery skills counted: " + ", ".join(f"{r * 100:g}%" for r in recoveries))
+        lines.append("Recovery skills counted: " + ", ".join(
+            f"{r * 100:g}% of max HP (= {r * max_hp:.0f} HP)" for r in recoveries))
     if self_costs:
         lines.append("Self HP costs counted: " + ", ".join(f"{c * 100:g}%" for c in self_costs))
+    whole = max(int(n_pair), 0)
+    need_whole = max(required_stamina(p, whole * pair - sum(recoveries) + sum(self_costs)), 0)
     lines += [
         f"A 'debuffer' = one opponent landing 1 gold debuff (avg {av['gold_debuff'] * 100:.2f}%) and "
         f"1 white debuff (avg {av['white_debuff'] * 100:.2f}%) = {pair * 100:.2f}% of max HP",
-        f"Survives about {n_pair:.1f} debuffers (gold + white each) -> {int(n_pair)} whole debuffers",
+        f"Survives about {n_pair:.1f} debuffers (gold + white each) -> {whole} whole debuffers; "
+        f"{stamina:g} Stamina is {stamina - need_whole:.0f} above the {need_whole:.0f} needed for {whole}",
         f"If debuffers only land gold debuffs: about {n_gold:.1f}",
         "Stamina needed for N debuffers (gold + white each): "
-        + ", ".join(f"{n}: {required_stamina(p, n * pair - sum(recoveries) + sum(self_costs)):.0f}"
+        + ", ".join(f"{n}: {max(required_stamina(p, n * pair - sum(recoveries) + sum(self_costs)), 0):.0f}"
                     for n in range(0, 6)),
         ASSUMPTIONS,
     ]
