@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+
+# Local configuration and downloaded data (never committed)
+.env
+racemech.toml
+data/
+reports/
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
