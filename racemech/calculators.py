@@ -332,7 +332,7 @@ def wit_on_course(bl: BotLib, course: Course, wit: float | None = None,
              f"Position keeping (pace-up / pace-down, Front Runner speed-up) runs in sections 1-10 = "
              f"0-{pk_end:.0f} m of this {d:.0f} m course."]
     data: dict = {"pk_end": pk_end, "downhill_m": down_m, "levels": {}}
-    for w in _levels(wit, (600.0, 900.0, 1200.0)):
+    for w in _levels(wit, (600.0, 1200.0)):
         lo, hi = stats.section_random_pct(w)
         row = {"activation": stats.skill_activation_pct(w), "rushed": stats.rushed_pct(w),
                "pace_up": stats.pace_up_check_pct(w), "front": stats.front_check_pct(w),
@@ -346,6 +346,12 @@ def wit_on_course(bl: BotLib, course: Course, wit: float | None = None,
                f"{row['downhill_share'] * 100:.1f}% of downhill time" if down else ""))
     if down:
         lines.append(f"Downhills: {', '.join(_hill(s) for s in down)} = {down_m:.0f} m in total.")
+        v = stats.base_speed(d)
+        gains = {w: stats.downhill_gain_m(down, w, v) for w in data["levels"]}
+        data["gain_m"] = gains
+        lines.append("Distance gained from downhill accel mode speed (+0.3 + slope%/10 m/s while in it): "
+                     + "; ".join(f"{w:g} Wit about {g:.1f} m ({g / 2.5:.1f} lengths)"
+                                 for w, g in gains.items()))
         for s in styles:
             p = _profile(bl, s, course)
             base_rate = p["r"].get("downhill_mode_rate") or 0
@@ -357,6 +363,7 @@ def wit_on_course(bl: BotLib, course: Course, wit: float | None = None,
                 eq[w] = saved / (0.8 * p["coef"])
                 parts.append(f"{w:g} Wit saves {saved:.0f} HP (= {eq[w]:.0f} Stamina)")
             data.setdefault("stamina_eq", {})[s] = eq
+            data.setdefault("need", {})[s] = {w: max(p["r"]["min_stamina"] - eq[w], 0.0) for w in eq}
             lines.append(f"{STYLE_NAME[s]} downhill HP saved: " + "; ".join(parts))
         base_wit = bl.stamina.DISTANCE_STATS.get(course.entry.get("distanceType", 3),
                                                  bl.stamina.DISTANCE_STATS[3])["wit"]
@@ -376,14 +383,32 @@ def wit_on_course(bl: BotLib, course: Course, wit: float | None = None,
             lo, hi = min(vals), max(vals)
             return f"{lo:.0f}" if round(lo) == round(hi) else f"{lo:.0f}-{hi:.0f}"
         ws = sorted(data["levels"])
-        summary = (f"SUMMARY for this course: the course-specific part of Wit is the {down_m:.0f} m of "
-                   f"downhill ({down_m / d * 100:.0f}% of the race). The HP saved there is worth "
-                   f"{span(ws[0])} Stamina at {ws[0]:g} Wit and {span(ws[-1])} Stamina at {ws[-1]:g} Wit "
-                   f"({who}). Otherwise {general}.")
+        g = data["gain_m"]
+        share = down_m / d
+        top_lengths = g[ws[-1]] / 2.5
+        weight = "a lot" if top_lengths >= 3.5 else ("noticeably" if top_lengths >= 1.5 else "a little")
+        worst = max(n[ws[0]] for n in data["need"].values())
+        if worst < 400:
+            kind = {1: "a Sprint race", 2: "a Mile race"}.get(course.entry.get("distanceType"), "this race")
+            stam = (f"Stamina is not a concern here ({kind}): even at {ws[0]:g} Wit the minimum Stamina for "
+                    f"a full last spurt is only about {worst:.0f}, so the HP the downhills save (worth "
+                    f"{span(ws[0])} Stamina at {ws[0]:g} Wit, {who}) matters little.")
+        else:
+            best = max(n[ws[-1]] for n in data["need"].values())
+            stam = (f"It also saves HP worth {span(ws[0])} Stamina at {ws[0]:g} Wit and {span(ws[-1])} "
+                    f"Stamina at {ws[-1]:g} Wit ({who}), which lowers the minimum Stamina for a full last "
+                    f"spurt from about {worst:.0f} to {best:.0f} (highest running style).")
+        points = [f"SUMMARY: Wit matters {weight} on this course because {down_m:.0f} m "
+                  f"({share * 100:.0f}% of the race) is downhill. Downhill accel mode gains about "
+                  f"{g[ws[0]]:.1f} m ({g[ws[0]] / 2.5:.1f} lengths) at {ws[0]:g} Wit and {g[ws[-1]]:.1f} m "
+                  f"({g[ws[-1]] / 2.5:.1f} lengths) at {ws[-1]:g} Wit.",
+                  f"STAMINA: {stam}",
+                  f"Otherwise {general}."]
     else:
-        summary = ("SUMMARY for this course: no downhills, so nothing about Wit is course-specific; "
-                   f"{general}.")
-    data["summary"] = summary
+        points = ["SUMMARY: this course has no downhills, so nothing about Wit is course-specific; "
+                  f"{general}."]
+    data["summary_points"] = points
+    data["summary"] = " ".join(points)
     return Fact("What Wit does on this course (computed)", lines, data)
 
 

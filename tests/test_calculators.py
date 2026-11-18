@@ -51,3 +51,10 @@ def test_power_on_cm22_uphill(botlib, cm22):
     assert f.data["uphill_m"] == 250
     assert f.data["levels"][1000.0] == pytest.approx(3.7, abs=0.1)
     assert 1200.0 in f.data["levels"]
+
+
+def test_wit_summary_cm21_sprint(botlib, cm21):
+    f = calc.wit_on_course(botlib, cm21)
+    assert f.data["gain_m"][1200.0] == pytest.approx(10.5, abs=0.2)
+    assert "matters a lot" in f.data["summary"]
+    assert "not a concern" in f.data["summary"]

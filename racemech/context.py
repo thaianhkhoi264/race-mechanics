@@ -16,7 +16,7 @@ MAX_SKILLS = 5
 _STAMINA_WORDS = re.compile(
     r"\b(stamina|stam|survive|debuff|debuffer|debuffers|hp|recovery|heal|spurt)\b", re.I)
 _WORTH_WORDS = re.compile(r"\b(worth|equivalent|equal|equals|value|how much)\b", re.I)
-_WIT_WORDS = re.compile(r"\b(wit|wits|wis|wisdom|int|intelligence|downhills?|kakari|rush(?:ed)?)\b", re.I)
+_WIT_WORDS = re.compile(r"\b(wit|wits|wis|wisdom|int|intelligence|downhills?)\b", re.I)
 _POWER_WORDS = re.compile(r"\b(power|pow|pwr|uphills?|hills?|slopes?)\b", re.I)
 
 
@@ -136,7 +136,8 @@ class ContextBuilder:
 
         if course is not None and (ent.wit is not None or _WIT_WORDS.search(question)):
             wit_fact = calc.wit_on_course(self.bl, course, ent.wit, tuple(ent.styles) or calc.STYLES)
-            ctx.facts.insert(0, calc.Fact("Key point: Wit on this course", [wit_fact.data["summary"]]))
+            title = "KEY POINTS for Wit on this course (the answer must state each one)"
+            ctx.facts.insert(0, calc.Fact(title, wit_fact.data["summary_points"]))
             ctx.facts.append(wit_fact)
         if course is not None and (ent.power is not None or _POWER_WORDS.search(question)):
             ctx.facts.append(calc.power_on_course(self.bl, course, ent.power))
