@@ -1,0 +1,11 @@
+# Copy to racemech.toml (gitignored) and adjust. Every key is optional;
+# environment variables RACEMECH_<KEY> override this file.
+
+bot_repo = '<bot_repo path>'   # read-only; its calculator modules are reused
+# data_dir = '<repo>\data'
+ollama_url = "http://localhost:11434"
+model = "qwen3.5:4b-q4_K_M"
+timeout_s = 120
+keep_alive = "5m"
+temperature = 0.2
+retrieval_k = 4

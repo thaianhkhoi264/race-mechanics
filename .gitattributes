@@ -1,0 +1,4 @@
+# Normalise line endings in the repository; check out as LF everywhere.
+* text=auto eol=lf
+*.png binary
+*.gguf binary
