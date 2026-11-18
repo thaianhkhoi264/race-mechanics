@@ -264,3 +264,61 @@
   category: decline
   question: got a tier list for cm22 umas?
   decline: true
+
+# ---- General mechanics, casual wording (stats and modes) ----
+
+- id: general-wit-effects
+  category: general
+  question: what does wit stat affect in a race
+  keywords: [["activation"], ["rush", "kakari"], ["position keeping", "position-keeping", "pace-up", "pace up"], ["downhill"]]
+
+- id: general-pace-down
+  category: general
+  question: what is pace down mode
+  keywords: [["0.945"], ["0.6", "60%", "hp use", "less hp", "saves hp"]]
+  forbid: ["-0.8", "−0.8"]
+
+- id: general-power
+  category: general
+  question: what does power do
+  keywords: [["acceleration", "accelerate"], ["uphill", "hill", "slope"]]
+
+- id: general-speed-early
+  category: general
+  question: does speed stat matter early in the race?
+  keywords: [["not", "doesn't", "does not", "no"], ["late"]]
+
+- id: general-stamina-hp
+  category: general
+  question: is stamina just hp?
+  keywords: [["hp"], ["0.8"]]
+
+- id: general-out-of-hp
+  category: general
+  question: what happens if my uma runs out of hp
+  keywords: [["minimum speed"]]
+
+- id: general-pace-up-ex
+  category: general
+  question: whats pace up ex
+  keywords: [["2.0", "2x", "x2", "double"]]
+
+- id: general-downhill
+  category: general
+  question: how does downhill accel mode help
+  keywords: [["0.04"], ["60%", "0.4"]]
+
+- id: general-guts-front
+  category: general
+  question: does guts matter for front runners
+  keywords: [["spot struggle", "lead competition"]]
+
+- id: general-rushed
+  category: general
+  question: whats the deal with kakari, how do i avoid it
+  keywords: [["wit"], ["1.6"]]
+
+- id: general-power-1200
+  category: general
+  question: what does power over 1200 do
+  keywords: [["conserve", "release"]]
