@@ -34,14 +34,20 @@ class Fact:
 # --------------------------------------------------------------------- skills
 
 def skill_on_course(bl: BotLib, sid: str, course: Course) -> Fact:
-    entry = bl.skill_data[sid]
-    name = bl.skill_name(sid) or sid
+    skill = bl.skill(sid)
+    entry = skill.entry
+    name = skill.name
     if sid.startswith("9"):
         name += " (Inherited)"
     info = bl.describe.describe_skill(sid, entry, name, course.entry, is_cm=course.is_cm)
     rarity = {1: "white (normal)", 2: "gold (rare)", 3: "unique", 4: "unique (evolved)", 5: "unique"}.get(
         entry.get("rarity"), str(entry.get("rarity")))
     lines = [f"Skill id {sid}, rarity: {rarity}", f"Course: {course.display}"]
+    if skill.source == "jp":
+        lines.insert(0, "JP-ONLY SKILL: not released on Global yet; the name is the Japanese name and "
+                        "the data is from the JP version.")
+    if skill.description:
+        lines.append(f"In-game description: {skill.description}")
     if not info["effect"]:
         lines.append("Cannot activate on this course.")
     else:

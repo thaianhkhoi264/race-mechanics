@@ -13,7 +13,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--version", action="version", version=f"racemech {__version__}")
     sub = p.add_subparsers(dest="command")
     sub.add_parser("config", help="print the effective settings")
-    sub.add_parser("sync", help="download the latest game data (uma-tools JSON)")
+    sync = sub.add_parser("sync", help="copy the game databases and refresh course geometry")
+    sync.add_argument("--offline", action="store_true", help="skip the course geometry download")
     return p
 
 
@@ -26,8 +27,9 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{k} = {v}")
         return 0
     if args.command == "sync":
-        for name, size in data_sync.sync(settings.data_dir):
-            print(f"{name:20} {size:>9,} bytes")
+        for item, status in data_sync.sync(settings.data_dir, settings.global_master, settings.jp_master,
+                                           download_courses=not args.offline):
+            print(f"{item:20} {status}")
         return 0
     parser.print_help()
     return 0

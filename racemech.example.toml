@@ -3,6 +3,9 @@
 
 bot_repo = '<bot_repo path>'   # read-only; its calculator modules are reused
 # data_dir = '<repo>\data'
+# Game databases (Global is the source of truth; JP only fills skills Global lacks)
+# global_master = '<path to the Global client>'
+# jp_master = '<path to the JP client's master.mdb>'
 ollama_url = "http://localhost:11434"
 model = "qwen3.5:4b-q4_K_M"
 timeout_s = 120
