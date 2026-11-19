@@ -57,7 +57,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "sync":
         for item, status in data_sync.sync(settings.data_dir, settings.global_master, settings.jp_master,
                                            download_courses=not args.offline,
-                                           cards_source=settings.cards_source):
+                                           cards_source=settings.cards_source,
+                                           sim_source=settings.sim_source,
+                                           bot_repo=settings.bot_repo):
             print(f"{item:20} {status}")
         return 0
     if args.command == "context":

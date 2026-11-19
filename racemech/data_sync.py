@@ -13,6 +13,10 @@ Refresh this project's local data.
    where a scraper saves it; if the remote host can't be reached, download it from
    the character database directly (manifest -> hashed data file); if both fail, keep the previous copy.
 
+5. Copy the simulations' CM simulation snapshots (``data/simulations/``) from the remote host, where
+   the bot_repo codebase's ``sim_module`` saves them daily; if the remote host can't be reached, fetch new
+   snapshots directly with that same module (imported read-only from the bot checkout).
+
 Answering questions never goes online; it only reads these cached files.
 """
 from __future__ import annotations
@@ -92,6 +96,34 @@ def sync_cards(data_dir: Path, source: str, timeout: float = 60.0) -> str:
     return "missing (remote host and the character database unreachable); character versions unavailable"
 
 
+def sim_dir(data_dir: Path) -> Path:
+    return data_dir / "simulation"
+
+
+def sync_simulations(data_dir: Path, source: str, bot_repo: Path | None, timeout: float = 60.0) -> str:
+    dest = sim_dir(data_dir)
+    if source and ":" in source and not (len(source) > 1 and source[1] == ":"):
+        try:
+            cmd = ["scp", "-q", "-r", "-o", "BatchMode=yes", "-o", f"ConnectTimeout={int(timeout)}",
+                   source.rstrip("/"), str(data_dir)]
+            r = subprocess.run(cmd, capture_output=True, timeout=timeout * 20)
+            if r.returncode == 0 and dest.is_dir():
+                return f"copied from {source}"
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    if bot_repo is not None and (Path(bot_repo) / "sim_module.py").is_file():
+        import importlib
+        import sys
+        if str(bot_repo) not in sys.path:
+            sys.path.insert(0, str(bot_repo))
+        try:
+            new = importlib.import_module("sim_module").sync(dest)
+            return f"fetched from simulation directly ({len(new)} new snapshots)"
+        except Exception as exc:  # noqa: BLE001 - any network/site failure keeps the old copy
+            return f"kept the previous copy (remote host unreachable, simulation fetch failed: {exc})"
+    return "kept the previous copy (remote host unreachable)" if dest.is_dir() else "missing (remote host unreachable)"
+
+
 def cm_timeline_path(data_dir: Path) -> Path:
     return data_dir / "cm_timeline.json"
 
@@ -115,7 +147,8 @@ def _atomic_copy(src: Path, dest: Path) -> int:
 
 def sync(data_dir: Path, global_master: Path, jp_master: Path | None,
          download_courses: bool = True, timeout: float = 60.0,
-         cards_source: str = "") -> list[tuple[str, str]]:
+         cards_source: str = "", sim_source: str = "",
+         bot_repo: Path | None = None) -> list[tuple[str, str]]:
     """Returns (item, status) lines."""
     out: list[tuple[str, str]] = []
     gd = game_dir(data_dir)
@@ -148,4 +181,5 @@ def sync(data_dir: Path, global_master: Path, jp_master: Path | None,
         _write_atomic(cm_timeline_path(data_dir), raw)
         out.append(("cm_timeline.json", f"{len(raw):,} bytes (downloaded)"))
         out.append(("character-cards.json", sync_cards(data_dir, cards_source, timeout)))
+        out.append(("simulation/", sync_simulations(data_dir, sim_source, bot_repo, timeout)))
     return out

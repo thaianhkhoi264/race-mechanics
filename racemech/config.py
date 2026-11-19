@@ -42,6 +42,9 @@ class Settings:
     cards_source: str = "<host>:<path>/character-cards.json"
     # Answer voice: "" (plain) or "persona" (see racemech/prompts/voice_persona.md).
     voice: str = ""
+    # Where `racemech sync` copies simulation CM simulation snapshots from (bot_repo saves them
+    # daily on the remote host). Falls back to fetching directly with the bot's sim_module.
+    sim_source: str = "<host>:<path>"
     # Model context window in tokens.
     num_ctx: int = 16384
 
