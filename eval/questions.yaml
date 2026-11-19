@@ -453,3 +453,9 @@
   category: characters
   question: does ny dia's stamina siphon work in cm23
   keywords: [["long"], ["not", "doesn't", "does not", "won't"]]
+
+# ---- Activation reasons and style mismatch ----
+- {id: act-kyoto-in-tokyo, category: skill, question: is kyoto racecourse good in cm22, keywords: [["kyoto"], ["tokyo"], ["not", "cannot", "can't", "won't", "doesn't"]]}
+- {id: act-right-handed-cm22, category: skill, question: is right-handed good for cm22, keywords: [["left"], ["not", "cannot", "can't", "won't", "doesn't"]]}
+- {id: act-claw-front, category: skill, question: should my front runner get claw forward in cm20, keywords: [["late surger"], ["no", "not", "useless", "cannot", "can't"]], forbid: ["GREAT"]}
+- {id: act-hp-cost, category: skill, question: does claw forward cost hp, keywords: [["2%"]]}
