@@ -35,7 +35,18 @@ def test_skill_on_course_moving_past_cm21(botlib, cm21):
     text = f.render()
     assert "550–788 m" in text
     assert "5th–6th" in text
-    assert "Decent accel" in text
+    assert "WAITS FOR RACE STATE" in text and "550 m (mid-race) to 788 m" in text
+    assert "OVERALL RATING" not in text          # the LLM judges skills itself now
+
+
+def test_when_it_fires_lines():
+    state = calc.when_it_fires({"trigger_kind": "state", "window": (1067, 1600)}, 1600)
+    assert "WAITS FOR RACE STATE" in state and "1,067 m (late-race) to the finish" in state
+    fixed = calc.when_it_fires({"trigger_kind": "fixed", "window": (1067, 1200)}, 1600)
+    assert "FIXED POINT" in fixed and "starts at 1,067 m" in fixed
+    rnd = calc.when_it_fires({"trigger_kind": "random", "window": (1667, 1875)}, 2500)
+    assert "RANDOM POINT" in rnd and "about 1,771 m (104 m after late-race starts)" in rnd
+    assert calc.when_it_fires({"trigger_kind": None, "window": None}, 1600) is None
 
 
 def test_wit_on_cm21_downhill_savings(botlib, cm21):

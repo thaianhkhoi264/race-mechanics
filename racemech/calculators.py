@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from racemech import stats
 from racemech.activation import blockers
 from racemech.botlib import BotLib, Course
+from racemech.simulation import phase_of
 
 STYLES = ("front", "pace", "late", "end")
 STYLE_NAME = {"front": "Front Runner", "pace": "Pace Chaser", "late": "Late Surger", "end": "End Closer"}
@@ -86,13 +87,45 @@ def skill_on_course(bl: BotLib, sid: str, course: Course, style: str | None = No
             lines.append(f"Precondition (must happen first): {info['arms']}")
         whole_race = all(a.startswith("Whenever its conditions are met —") or "(0–" in a
                          for a in info["activates"]) and "late-race" not in " ".join(info["activates"])
-        if info["timing"] and not whole_race:
+        when = when_it_fires(info, float(course.entry["distance"]))
+        if when and not whole_race:
+            lines.append(when)
+        if info["timing"] and not whole_race and info.get("trigger_kind") not in ("state", "random"):
             lines.append(f"Timing: {clear_timing(info['timing'])}")
         if style_block:
-            lines.append("OVERALL RATING for this runner: USELESS (wrong running style).")
-        elif info["rating"]:
-            lines.append(_rating_line(_accel_verdict(bl, sid, entry, course) or info["rating"]))
+            lines.append("For this runner: USELESS (wrong running style).")
     return Fact(f"Skill: {name}", lines, {"info": info, "sid": sid, "blocked": course_block})
+
+
+_KIND = {
+    "fixed": "FIXED POINT: it fires at the start of its window in every race",
+    "random": "RANDOM POINT: it fires at a random point inside its window, different each race",
+    "state": "WAITS FOR RACE STATE: it can fire from the start of its window, but only at the first moment "
+             "its position/race-state conditions hold, so it may fire anywhere up to the end of the "
+             "window, or not at all",
+}
+
+
+def when_it_fires(info: dict, distance: float) -> str | None:
+    """One line from the bot's ``trigger_kind``/``window``, with the phase at each end, so the
+    model never reads a state-gated window as 'fires at the start of late-race'."""
+    kind, window = info.get("trigger_kind"), info.get("window")
+    if kind not in _KIND or not window:
+        return None
+    start, end = float(window[0]), float(window[1])
+    until = "the finish" if end >= distance - 1 else f"{end:,.0f} m ({phase_of(end, distance)})"
+    late = distance * 2 / 3
+    if kind == "fixed":
+        span = f"Window starts at {start:,.0f} m ({phase_of(start, distance)})"
+    else:
+        span = f"Window: {start:,.0f} m ({phase_of(start, distance)}) to {until}, {end - start:,.0f} m long"
+    if kind == "random":
+        mid = (start + end) / 2
+        rel = (f"{mid - late:,.0f} m after late-race starts" if mid > late + 1
+               else f"{late - mid:,.0f} m before late-race starts" if mid < late - 1 else "at late-race start")
+        span += (f". On average it fires around the middle, about {mid:,.0f} m ({rel}); it is not "
+                 "guaranteed to fire at the start of the window")
+    return f"WHEN IT FIRES: {_KIND[kind]}. {span}. Late-race (the last spurt) starts at {late:,.0f} m."
 
 
 _TIMING = re.compile(r"^(?P<lead>.*?) (?P<off>[\d,]+) m (?P<dir>before late-race|after late-race starts) "
@@ -132,34 +165,6 @@ def _clear_activates(text: str) -> str:
         suffix = {1: "st", 2: "nd", 3: "rd"}.get(n, "th")
         return f"At a random point on the track's {n}{suffix} corner ({m[1]}){m[2]}"
     return text
-
-
-def _rating_line(verdict: str) -> str:
-    """
-    Split the bot's verdict ("Bad inherited accel, high acceleration, but activates too early, requires ...")
-    into labelled parts so the overall rating can't be confused with the size word.
-    """
-    parts = [x.strip() for x in verdict.split(", ")]
-    rating = parts[0]
-    size = parts[1] if len(parts) > 1 else ""
-    rest = ", ".join(parts[2:]).removeprefix("but ").strip()
-    word = rating.split()[0].upper()
-    out = f"OVERALL RATING on this course: {word} ({rating})"
-    if size:
-        out += f". Raw size of the boost: {size} (this is not the rating)"
-    if rest:
-        out += f". Why / requirements: {rest}"
-    return out
-
-
-def _accel_verdict(bl: BotLib, sid: str, entry: dict, course: Course) -> str | None:
-    """The bot's full verdict sentence (rating, potency, and why it was downgraded)."""
-    d = bl.describe
-    for alt in entry["alternatives"]:
-        cond, pre = alt.get("condition", ""), alt.get("precondition", "")
-        if d.evaluate_trigger(cond, pre, course.entry):
-            return d.accel_verdict(cond, pre, alt["effects"], course.entry, sid.startswith("9"))
-    return None
 
 
 # -------------------------------------------------------------------- stamina
