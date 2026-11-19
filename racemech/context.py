@@ -17,6 +17,9 @@ _STAMINA_WORDS = re.compile(
     r"\b(stamina|stam|survive|debuff|debuffer|debuffers|hp|recovery|heal|spurt)\b", re.I)
 _WORTH_WORDS = re.compile(r"\b(worth|equivalent|equal|equals|value|how much)\b", re.I)
 _WIT_WORDS = re.compile(r"\b(wit|wits|wis|wisdom|int|intelligence|downhills?)\b", re.I)
+_LAYOUT_WORDS = re.compile(
+    r"\b(phase|phases|early|mid|late|section|sections|straight|straights|corner|corners|where|when|"
+    r"layout|metres?|meters?|spurt|downhill|uphill|hill|slope)\b", re.I)
 _POWER_WORDS = re.compile(r"\b(power|pow|pwr|uphills?|hills?|slopes?)\b", re.I)
 
 
@@ -102,6 +105,8 @@ class ContextBuilder:
         course = ctx.course
         if course is not None and course.note:
             ctx.notes.append(course.note)
+        if course is not None and ent.cm is not None and _LAYOUT_WORDS.search(question):
+            ctx.facts.append(calc.course_layout(course))
 
         greens, recoveries, candidates, debuffs = self._classify(ent, course)
         ctx.notes += [n for n in ent.notes if n not in ctx.notes]
