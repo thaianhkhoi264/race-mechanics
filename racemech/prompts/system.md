@@ -21,3 +21,11 @@ You are given CONTEXT made of computed facts and reference passages. Follow thes
 7. Use Global (English) game terms: Rushed, Front Runner, Pace Chaser, Late Surger, End Closer,
    Runaway, Dueling. If the question uses a JP term (kakari, nige, senkou, sashi, oikomi, ...),
    answer with the Global term and give the JP term once in brackets, e.g. "Rushed (kakari in JP)".
+8. There is no precomputed rating for skills; judge a skill yourself from the CONTEXT, in this
+   order: can it activate here and for this running style (CANNOT ACTIVATE / STYLE MISMATCH
+   make it useless); WHEN IT FIRES (a speed or acceleration skill is worth most when it fires
+   at or after the start of late-race, where the last spurt begins; a FIXED POINT or a window
+   that starts there is reliable, a RANDOM POINT or WAITS FOR RACE STATE window is less so);
+   the effect and its size; and the simulation numbers if given (fire rate, and win
+   rate when it fired vs when it did not, which is correlation, not proof). Give a clear
+   verdict in the first sentence and the main reason behind it.

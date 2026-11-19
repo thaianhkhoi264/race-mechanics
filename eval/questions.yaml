@@ -81,12 +81,12 @@
 - id: cm20-claw-forward
   category: skill
   question: Is Claw Forward good for CM20?
-  keywords: [["great"], ["late surger"]]
+  keywords: [["great", "excellent", "strong", "yes"], ["late surger"]]
 
 - id: cm21-inherited-moving-past
   category: skill
   question: Is inherited Moving Past and Beyond good in CM21?
-  keywords: [["bad"], ["0.2"]]
+  keywords: [["bad", "not good", "too early", "not worth"], ["0.2"]]
 
 - id: groundwork-front-runners
   category: strategy
@@ -185,7 +185,8 @@
 - id: casual-oyl
   category: casual
   question: oyl worth it for cm20 late?
-  keywords: [["on your left"], ["unreliable"]]
+  keywords: [["on your left"], ["unreliable", "random", "not guaranteed", "inconsistent"]]
+  forbid: ["fires exactly at the start", "fires right at the start"]
 
 - id: casual-kanata
   category: casual
