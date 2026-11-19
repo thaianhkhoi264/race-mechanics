@@ -40,6 +40,8 @@ class Settings:
     # Where `racemech sync` copies the character database's character-cards.json from (scp host:path or a local
     # path); a scraper keeps it current on the remote host. Falls back to the character database.
     cards_source: str = "<host>:<path>/character-cards.json"
+    # Answer voice: "" (plain) or "persona" (see racemech/prompts/voice_persona.md).
+    voice: str = ""
     # Model context window in tokens.
     num_ctx: int = 16384
 

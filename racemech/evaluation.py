@@ -94,6 +94,8 @@ def run(assistant, questions: list[dict], only: set[str] | None = None, echo=pri
         scores.append(sc)
         flag = "PASS" if sc.passed else "FAIL"
         extra = f"  invented: {sc.unsupported_numbers}" if sc.unsupported_numbers else ""
+        if getattr(ans, "voice_path", "") == "fallback":
+            extra += "  [voice fallback]"
         echo(f"{flag}  {sc.id:42} {sc.seconds:5.1f}s  {'; '.join(sc.failures)}{extra}")
     return scores
 

@@ -25,12 +25,14 @@ def build_parser() -> argparse.ArgumentParser:
         if name == "ask":
             sp.add_argument("question", nargs="+")
         sp.add_argument("--model", help="Ollama model tag (overrides the setting)")
+        sp.add_argument("--voice", help='answer voice: "persona", or "" for plain (overrides the setting)')
         sp.add_argument("--show-context", action="store_true", help="print what the model was given")
     ctx = sub.add_parser("context", help="show the context for a question without calling the model")
     ctx.add_argument("question", nargs="+")
     ev = sub.add_parser("eval", help="run the evaluation set against one or more models")
     ev.add_argument("--models", help="comma-separated Ollama tags (default: the configured model)")
     ev.add_argument("--only", help="comma-separated question ids")
+    ev.add_argument("--voice", help='answer voice for the run: "persona", or "" for plain')
     return p
 
 
@@ -71,7 +73,7 @@ def main(argv: list[str] | None = None) -> int:
         questions = evaluation.load_questions()
         summaries = []
         for model in models:
-            assistant = Assistant(settings, model.strip())
+            assistant = Assistant(settings, model.strip(), args.voice)
             if not assistant.client.available():
                 print(UNAVAILABLE)
                 return 2
@@ -87,7 +89,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command in ("ask", "chat"):
         from racemech.assistant import Assistant
-        assistant = Assistant(settings, args.model)
+        assistant = Assistant(settings, args.model, args.voice)
         if not assistant.client.available():
             print(UNAVAILABLE)
             return 2
