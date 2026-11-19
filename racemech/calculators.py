@@ -10,6 +10,7 @@ import re
 from dataclasses import dataclass, field
 
 from racemech import stats
+from racemech.activation import blockers
 from racemech.botlib import BotLib, Course
 
 STYLES = ("front", "pace", "late", "end")
@@ -35,7 +36,23 @@ class Fact:
 
 # --------------------------------------------------------------------- skills
 
-def skill_on_course(bl: BotLib, sid: str, course: Course) -> Fact:
+_HP_EFFECT = re.compile(r"HP Recovery ([+-])(\d*\.?\d+)( on other runners)?")
+
+
+def clear_effect(text: str) -> str:
+    """'HP Recovery +0.055' -> 'restores 5.5% of max HP'; label effect type 35."""
+    def hp(m: re.Match) -> str:
+        pct = f"{float(m[2]) * 100:g}% of max HP"
+        if m[3]:
+            return f"drains {pct} from other runners" if m[1] == "-" else f"restores {pct} to other runners"
+        return f"restores {pct}" if m[1] == "+" else f"costs {pct}"
+    text = _HP_EFFECT.sub(hp, text)
+    lane = "target lane shift (moves her aim sideways to get clear; inferred from the skill text)"
+    return re.sub(r"Effect type 35 [+-]?\d*\.?\d+", lane, text)
+
+
+def skill_on_course(bl: BotLib, sid: str, course: Course, style: str | None = None) -> Fact:
+    """``style``: the asker's running style, if known; a skill locked to another style is flagged."""
     skill = bl.skill(sid)
     entry = skill.entry
     name = skill.name
@@ -50,10 +67,20 @@ def skill_on_course(bl: BotLib, sid: str, course: Course) -> Fact:
                         "the data is from the JP version.")
     if skill.description:
         lines.append(f"In-game description: {skill.description}")
-    if not info["effect"]:
-        lines.append("Cannot activate on this course.")
+    tracks = bl.game.track_names
+    course_block = blockers(entry, course, tracks)
+    if not info["effect"] or course_block:
+        why = "; ".join(course_block) if course_block else "its conditions can't be met here"
+        lines.append(f"CANNOT ACTIVATE on this course: {why}.")
+        effects = [e for a in entry.get("alternatives", [])[:1] for e in a.get("effects", [])]
+        if effects:
+            lines.append("Effect where it can activate: " + clear_effect(bl.describe.effect_text(effects)))
     else:
-        lines += [f"Effect: {e}" for e in info["effects"]]
+        style_block = blockers(entry, course, tracks, style) if style else []
+        if style_block:
+            lines.append(f"STYLE MISMATCH: {'; '.join(style_block)}. It cannot activate for this runner, "
+                         "so it is useless for her whatever its rating.")
+        lines += [f"Effect: {clear_effect(e)}" for e in info["effects"]]
         lines += [f"Activates: {_clear_activates(a)}" for a in info["activates"]]
         if info["arms"]:
             lines.append(f"Precondition (must happen first): {info['arms']}")
@@ -61,9 +88,11 @@ def skill_on_course(bl: BotLib, sid: str, course: Course) -> Fact:
                          for a in info["activates"]) and "late-race" not in " ".join(info["activates"])
         if info["timing"] and not whole_race:
             lines.append(f"Timing: {clear_timing(info['timing'])}")
-        if info["rating"]:
+        if style_block:
+            lines.append("OVERALL RATING for this runner: USELESS (wrong running style).")
+        elif info["rating"]:
             lines.append(_rating_line(_accel_verdict(bl, sid, entry, course) or info["rating"]))
-    return Fact(f"Skill: {name}", lines, {"info": info, "sid": sid})
+    return Fact(f"Skill: {name}", lines, {"info": info, "sid": sid, "blocked": course_block})
 
 
 _TIMING = re.compile(r"^(?P<lead>.*?) (?P<off>[\d,]+) m (?P<dir>before late-race|after late-race starts) "

@@ -134,7 +134,8 @@ class ContextBuilder:
         ctx.notes += [n for n in ent.notes if n not in ctx.notes]
         for sm in ent.skills[:MAX_SKILLS]:
             if course is not None and sm.role != "opponent":
-                ctx.facts.append(calc.skill_on_course(self.bl, sm.sid, course))
+                style = ent.styles[0] if len(ent.styles) == 1 else None
+                ctx.facts.append(calc.skill_on_course(self.bl, sm.sid, course, style))
 
         if ent.debuffers:
             av = calc.averages(self.bl)
