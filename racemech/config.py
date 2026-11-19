@@ -37,6 +37,9 @@ class Settings:
     # Put the whole race mechanics doc in the system prompt (a fixed prefix Ollama can reuse)
     # instead of retrieving mechanics sections per question.
     full_mechanics: bool = True
+    # Where `racemech sync` copies the character database's character-cards.json from (scp host:path or a local
+    # path); a scraper keeps it current on the remote host. Falls back to the character database.
+    cards_source: str = "<host>:<path>/character-cards.json"
     # Model context window in tokens.
     num_ctx: int = 16384
 

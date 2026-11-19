@@ -434,3 +434,22 @@
 - {id: layout-early-cm22, category: stats, question: when does early race end in cm22, numbers: [{value: 267, tol: 1}]}
 - {id: layout-final-straight-cm21, category: stats, question: how long is the final straight in cm21, numbers: [{value: 412, tol: 1}]}
 - {id: layout-late-cm23, category: stats, question: where does late race start in cm23, numbers: [{value: 1333, tol: 1}]}
+
+# ---- Characters (#37) ----
+- id: char-ny-dia-cm24
+  category: characters
+  question: How much stamina should NY Dia have for CM24
+  keywords: [["late surger"], ["rain cloud bolt"], ["stamina siphon"], ["predicted"]]
+  numbers: [{value: 1158, tol: 1}]
+- id: char-tamamo-og-cm24
+  category: characters
+  question: how much stamina does og tamamo need for cm24
+  keywords: [["pace chaser"], ["late surger"], ["end closer"]]
+- id: char-tamamo-style
+  category: characters
+  question: what running style should i run tamamo cross as
+  keywords: [["pace chaser", "late surger", "end closer"], ["aptitude"]]
+- id: char-dia-medium
+  category: characters
+  question: does ny dia's stamina siphon work in cm23
+  keywords: [["long"], ["not", "doesn't", "does not", "won't"]]

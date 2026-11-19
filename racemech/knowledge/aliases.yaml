@@ -78,3 +78,35 @@ terms:
   chanmi: Champions Meeting
   bashin: lengths
   aoharu: Unity Cup
+
+# Character nicknames -> the Global character name (only names that exist are used).
+characters:
+  dia: Satono Diamond
+  tamamo: Tamamo Cross
+  maru: Maruzensky
+  oguri: Oguri Cap
+  teio: Tokai Teio
+  mcqueen: Mejiro McQueen
+  kita: Kitasan Black
+  kitasan: Kitasan Black
+  spe: Special Week
+  specweek: Special Week
+  suzuka: Silence Suzuka
+  goldship: Gold Ship
+  golshi: Gold Ship
+  scarlet: Daiwa Scarlet
+  rice: Rice Shower
+  taiki: Taiki Shuttle
+  fuku: Matikanefukukitaru
+
+# Version words -> the character database version tag ("original" = the base version). Display names such as
+# "new year" or "summer" are recognised automatically.
+versions:
+  ny: new_year
+  newyear: new_year
+  og: original
+  original: original
+  base: original
+  swimsuit: summer
+  xmas: christmas
+  wed: wedding
