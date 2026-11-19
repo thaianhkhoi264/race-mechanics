@@ -71,3 +71,16 @@ def test_course_layout_cm22(cm22):
     assert f.data["p1"] == pytest.approx(266.7, abs=0.1)
     assert f.data["p2"] == pytest.approx(1066.7, abs=0.1)
     assert any(ln.startswith("Final straight:") for ln in f.lines)
+
+
+def test_drain_skill_counts_as_recovery_not_debuff(botlib):
+    from racemech.context import ContextBuilder
+    from racemech.retrieval import build_index
+    cb = ContextBuilder(botlib, build_index(), 5)
+    ctx = cb.build("late surger 1000 stam with stamina siphon cm20, enough?")       # CM20 is Long
+    plan = next(f for f in ctx.facts if f.title.startswith("Is this Stamina enough"))
+    text = "\n".join(plan.lines)
+    assert "Debuffs expected: none" in text and "1 x Stamina Siphon (3.5%)" in text
+    assert not any(f.title.startswith("Course layout") for f in ctx.facts)    # "late surger" is not a phase
+    mile = cb.build("late surger 1000 stam with stamina siphon cm22, enough?")    # Long-only skill
+    assert any("Stamina Siphon does not activate" in n for n in mile.notes)

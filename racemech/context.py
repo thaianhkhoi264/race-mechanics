@@ -21,8 +21,8 @@ _STAMINA_WORDS = re.compile(
 _WORTH_WORDS = re.compile(r"\b(worth|equivalent|equal|equals|value|how much)\b", re.I)
 _WIT_WORDS = re.compile(r"\b(wit|wits|wis|wisdom|int|intelligence|downhills?)\b", re.I)
 _LAYOUT_WORDS = re.compile(
-    r"\b(phase|phases|early|mid|late|section|sections|straight|straights|corner|corners|where|when|"
-    r"layout|metres?|meters?|spurt|downhill|uphill|hill|slope)\b", re.I)
+    r"\b(phase|phases|(?:early|mid|late)[ -]?race|section|sections|straight|straights|corner|corners|"
+    r"where|when|layout|metres?|meters?|downhill|uphill|hill|slope)\b", re.I)
 _POWER_WORDS = re.compile(r"\b(power|pow|pwr|uphills?|hills?|slopes?)\b", re.I)
 
 
@@ -69,6 +69,10 @@ class ContextBuilder:
         greens, recoveries, candidates, debuffs = [], [], [], []
         for sm in ent.skills:
             name = self.bl.skill_name(sm.sid)
+            # Drain skills (Stamina Siphon/Eater) take HP from others AND heal the user: that is a
+            # recovery for whoever has it, never a debuff on them.
+            self_heal = any(e["type"] == 9 and e["target"] in (1, 2) and e["modifier"] > 0
+                            for e in _effects(self.bl.skill(sm.sid).entry))
             for e in _effects(self.bl.skill(sm.sid).entry):
                 typ, tgt, mod = e["type"], e["target"], e["modifier"]
                 if typ == 2 and tgt in (1, 2) and mod > 0:
@@ -79,9 +83,13 @@ class ContextBuilder:
                     item = calc.HPItem(name, mod / 10000, sm.count)
                     (candidates if sm.role == "candidate" else greens).append(item)
                 elif typ == 9 and tgt in (1, 2) and mod > 0:
+                    if course is not None and not self._active(sm.sid, course):
+                        ent.notes.append(f"{name} does not activate on {course.display}, so its recovery "
+                                         "was not counted.")
+                        continue
                     item = calc.HPItem(name, mod / 10000, sm.count)
                     (candidates if sm.role == "candidate" else recoveries).append(item)
-                elif typ == 9 and tgt not in (1, 2) and mod < 0:
+                elif typ == 9 and tgt not in (1, 2) and mod < 0 and not self_heal:
                     sm.role = "opponent"
                     debuffs.append(calc.HPItem(name, -mod / 10000, sm.count))
         for r in ent.recoveries:
