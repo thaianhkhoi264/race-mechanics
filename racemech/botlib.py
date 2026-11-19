@@ -66,6 +66,10 @@ class BotLib:
             self.cm = importlib.import_module("cm_module")
             self.describe = importlib.import_module("skill_describe")
             self.stamina = importlib.import_module("stamina_module")
+            try:
+                self.simulation = importlib.import_module("sim_module")     # optional
+            except ImportError:
+                self.simulation = None
         except ImportError as exc:
             raise BotLibError(f"Could not import the bot modules ({exc}); install the [bot] extra") from exc
 

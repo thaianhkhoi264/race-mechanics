@@ -8,10 +8,11 @@ import re
 from dataclasses import dataclass, field
 
 from racemech import calculators as calc
+from racemech import simulation
 from racemech.botlib import BotLib, Course
 from racemech.character_facts import character_profile, character_stamina
 from racemech.characters import CharacterMatcher, load_versions
-from racemech.data_sync import cards_path
+from racemech.data_sync import cards_path, sim_dir
 from racemech.entities import WHITE_RECOVERY, Entities, SkillMatcher, extract
 from racemech.retrieval import BM25, Doc
 
@@ -60,6 +61,16 @@ class ContextBuilder:
         self.bl, self.index, self.k = bl, index, k
         self.matcher = SkillMatcher(bl.game.skills)
         self.characters = CharacterMatcher(bl.game.cards, load_versions(cards_path(bl.data_dir)))
+        self._sims: dict[int, list[dict]] = {}
+
+    def _snapshots(self, number: int) -> list[dict]:
+        """simulation snapshots for one CM (empty if none are stored or the bot module is missing)."""
+        if number not in self._sims:
+            try:
+                self._sims[number] = self.bl.simulation.snapshots(number, sim_dir(self.bl.data_dir))
+            except (AttributeError, OSError, ValueError):
+                self._sims[number] = []
+        return self._sims[number]
 
     def _active(self, sid: str, course: Course) -> bool:
         return bool(calc.skill_on_course(self.bl, sid, course).data["info"]["effect"])
@@ -100,6 +111,22 @@ class ContextBuilder:
                                           else f"a {r * 100:g}% recovery", r))
         return greens, recoveries, [c for c in candidates if c.label], debuffs
 
+    def _add_simulation(self, ctx: Context, sid: str, number: int, styles: list[str]) -> None:
+        snaps = self._snapshots(number)
+        name = self.bl.skill_name(sid)
+        if not snaps:
+            note = (f"No simulation data for CM#{number} yet (it appears only once that CM's teams "
+                    "are being captured); say so if asked how the skill performs in practice.")
+            if note not in ctx.notes:
+                ctx.notes.append(note)
+            return
+        stats = simulation.skill_stats(sid, snaps)
+        if stats is None:
+            ctx.notes.append(f"In the simulations' CM#{number} simulations nobody owned {name}.")
+            return
+        ctx.facts.append(calc.Fact(f"Simulation data (simulation): {name} in CM#{number}",
+                                   simulation.describe(stats, snaps[-1]["meta"], styles or None)))
+
     def build(self, question: str) -> Context:
         ent = extract(question, self.matcher)
         ctx = Context(question, ent, None, notes=list(ent.notes))
@@ -136,6 +163,8 @@ class ContextBuilder:
             if course is not None and sm.role != "opponent":
                 style = ent.styles[0] if len(ent.styles) == 1 else None
                 ctx.facts.append(calc.skill_on_course(self.bl, sm.sid, course, style))
+                if course.is_cm and course.cm:
+                    self._add_simulation(ctx, sm.sid, course.cm["number"], ent.styles)
 
         if ent.debuffers:
             av = calc.averages(self.bl)

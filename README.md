@@ -27,6 +27,7 @@ The language model never does the maths. Every question goes through three steps
 | Announced / predicted Champions Meetings not in the game data yet (labelled as such) | events timeline (the one bot_repo uses), cached | Only during `racemech sync` |
 | Characters: aptitudes, unique and built-in skills, default style | Global `master.mdb` | No |
 | Character version names ("New Year", "Festival") for matching "NY Dia" | the character database `character-cards.json`, copied from the remote host (a scraper) or downloaded from the character database | Only during `racemech sync` |
+| CM simulation data: skill fire rates, timing and win rates on real players' builds | community simulation snapshots, saved daily by bot_repo on the remote host and copied (or fetched directly as a fallback) | Only during `racemech sync` |
 | Stamina model, trigger windows, accel ratings | bot_repo calculator modules, imported read-only | No |
 | Condition-field reference | bot_repo checkout (`tests/skill_condition_explanation.txt`) | No |
 | Mechanics knowledge | `racemech/knowledge/*.md` in this repo | No |
