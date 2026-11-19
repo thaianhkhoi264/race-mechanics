@@ -9,6 +9,9 @@ from dataclasses import dataclass, field
 
 from racemech import calculators as calc
 from racemech.botlib import BotLib, Course
+from racemech.character_facts import character_profile, character_stamina
+from racemech.characters import CharacterMatcher, load_versions
+from racemech.data_sync import cards_path
 from racemech.entities import WHITE_RECOVERY, Entities, SkillMatcher, extract
 from racemech.retrieval import BM25, Doc
 
@@ -56,6 +59,7 @@ class ContextBuilder:
     def __init__(self, bl: BotLib, index: BM25, k: int = 5):
         self.bl, self.index, self.k = bl, index, k
         self.matcher = SkillMatcher(bl.game.skills)
+        self.characters = CharacterMatcher(bl.game.cards, load_versions(cards_path(bl.data_dir)))
 
     def _active(self, sid: str, course: Course) -> bool:
         return bool(calc.skill_on_course(self.bl, sid, course).data["info"]["effect"])
@@ -108,6 +112,16 @@ class ContextBuilder:
         if course is not None and ent.cm is not None and _LAYOUT_WORDS.search(question):
             ctx.facts.append(calc.course_layout(course))
 
+        char = self.characters.find(question)
+        char_styles: tuple[str, ...] = ()
+        if char is not None:
+            ctx.notes += char.notes
+            profile = character_profile(self.bl, char, course, ent.styles[0] if ent.styles else None)
+            ctx.facts.append(profile)
+            verdict = profile.data["verdict"]
+            char_styles = tuple(ent.styles) or ((verdict["dominant"],) if verdict["dominant"]
+                                                else tuple(verdict["candidates"]))
+
         greens, recoveries, candidates, debuffs = self._classify(ent, course)
         ctx.notes += [n for n in ent.notes if n not in ctx.notes]
         for sm in ent.skills[:MAX_SKILLS]:
@@ -121,8 +135,17 @@ class ContextBuilder:
 
         wants_stamina = bool(_STAMINA_WORDS.search(question) or ent.stamina or ent.debuffers or debuffs)
         if course is not None and wants_stamina:
-            styles = tuple(ent.styles) or calc.STYLES
-            if ent.stamina is not None:
+            styles = tuple(ent.styles) or char_styles or calc.STYLES
+            if char is not None and ent.stamina is None:
+                lost = sum(d.pct * d.count for d in debuffs)
+                points = [next(ln for ln in profile.lines if ln.startswith("STYLE VERDICT"))]
+                for s in styles[:3]:
+                    fact = character_stamina(self.bl, char, course, s, lost)
+                    ctx.facts.append(fact)
+                    points.append(next(ln for ln in fact.lines if ln.startswith("RECOMMENDATION")))
+                title = f"KEY POINTS for {char.display} (the answer must state each one)"
+                ctx.facts.insert(0, calc.Fact(title, points))
+            elif ent.stamina is not None:
                 for s in styles:
                     ctx.facts.append(calc.stamina_plan(self.bl, course, s, ent.stamina, greens, recoveries,
                                                        candidates, debuffs))

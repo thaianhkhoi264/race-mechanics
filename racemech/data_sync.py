@@ -9,13 +9,19 @@ Refresh this project's local data.
    when new racecourses are added.
 3. Download the events timeline (the same one bot_repo reads), cached locally, for
    Champions Meetings that are announced or predicted but not in the Global game data yet.
+4. Copy the character database's ``character-cards.json`` (version tags such as ``new_year``) from the remote host,
+   where a scraper saves it; if the remote host can't be reached, download it from
+   the character database directly (manifest -> hashed data file); if both fail, keep the previous copy.
 
 Answering questions never goes online; it only reads these cached files.
 """
 from __future__ import annotations
 
 import gzip
+import json
 import shutil
+import subprocess
+import tempfile
 import urllib.request
 from pathlib import Path
 
@@ -23,6 +29,67 @@ from racemech.gamedata import game_dir
 
 COURSE_DATA_URL = "<course data URL>"
 CM_TIMELINE_URL = "<events timeline URL>"
+
+
+CARDS_MANIFEST_URL = "<character database manifest URL>"
+CARDS_DATA_URL = "<character database data URL>"
+
+
+def cards_path(data_dir: Path) -> Path:
+    return data_dir / "character-cards.json"
+
+
+def _valid_cards(body: bytes) -> bool:
+    try:
+        data = json.loads(body)
+    except ValueError:
+        return False
+    return isinstance(data, list) and bool(data) and "card_id" in data[0]
+
+
+def _cards_from_source(source: str, timeout: float) -> bytes | None:
+    """``host:/path`` is copied with scp (key auth only, no prompts); a plain path is read."""
+    if not source:
+        return None
+    local = Path(source)
+    if local.is_file():
+        return local.read_bytes()
+    if ":" not in source or (len(source) > 1 and source[1] == ":"):     # a drive letter, not host:path
+        return None
+    with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+        tmp = Path(f.name)
+    try:
+        r = subprocess.run(["scp", "-q", "-o", "BatchMode=yes", "-o", f"ConnectTimeout={int(timeout)}",
+                            source, str(tmp)], capture_output=True, timeout=timeout + 30)
+        return tmp.read_bytes() if r.returncode == 0 and tmp.is_file() else None
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    finally:
+        tmp.unlink(missing_ok=True)
+
+
+def _cards_from_download(timeout: float) -> bytes | None:
+    req = lambda url: urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (racemech)"})  # noqa: E731
+    try:
+        with urllib.request.urlopen(req(CARDS_MANIFEST_URL), timeout=timeout) as resp:
+            manifest = json.loads(resp.read())
+        url = CARDS_DATA_URL.format(name="character-cards", hash=manifest["character-cards"])
+        with urllib.request.urlopen(req(url), timeout=timeout) as resp:
+            return resp.read()
+    except (OSError, ValueError, KeyError):
+        return None
+
+
+def sync_cards(data_dir: Path, source: str, timeout: float = 60.0) -> str:
+    for label, body in (("copied from " + source, lambda: _cards_from_source(source, timeout)),
+                        ("downloaded from the character database", lambda: _cards_from_download(timeout))):
+        raw = body()
+        if raw and _valid_cards(raw):
+            _write_atomic(cards_path(data_dir), raw)
+            return f"{len(json.loads(raw))} cards ({label})"
+    if cards_path(data_dir).is_file():
+        return "kept the previous copy (remote host and the character database unreachable)"
+    return "missing (remote host and the character database unreachable); character versions unavailable"
 
 
 def cm_timeline_path(data_dir: Path) -> Path:
@@ -47,7 +114,8 @@ def _atomic_copy(src: Path, dest: Path) -> int:
 
 
 def sync(data_dir: Path, global_master: Path, jp_master: Path | None,
-         download_courses: bool = True, timeout: float = 60.0) -> list[tuple[str, str]]:
+         download_courses: bool = True, timeout: float = 60.0,
+         cards_source: str = "") -> list[tuple[str, str]]:
     """Returns (item, status) lines."""
     out: list[tuple[str, str]] = []
     gd = game_dir(data_dir)
@@ -79,4 +147,5 @@ def sync(data_dir: Path, global_master: Path, jp_master: Path | None,
             pass                       # served already decompressed
         _write_atomic(cm_timeline_path(data_dir), raw)
         out.append(("cm_timeline.json", f"{len(raw):,} bytes (downloaded)"))
+        out.append(("character-cards.json", sync_cards(data_dir, cards_source, timeout)))
     return out

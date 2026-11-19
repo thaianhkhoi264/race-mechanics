@@ -63,11 +63,31 @@ class ChampionsMeeting:
     weather: str
 
 
+GRADE = {1: "G", 2: "F", 3: "E", 4: "D", 5: "C", 6: "B", 7: "A", 8: "S"}
+STYLE_IDS = {1: "front", 2: "pace", 3: "late", 4: "end"}
+
+
+@dataclass
+class Card:
+    """One playable character version (a "card"), from the Global client."""
+    card_id: int
+    chara_id: int
+    name: str                      # "Satono Diamond"
+    title: str                     # "[Jade's Prosperity]"
+    default_style: str | None      # the game's default running style: front/pace/late/end
+    distance: dict[str, str]       # sprint/mile/medium/long -> grade letter
+    style: dict[str, str]          # front/pace/late/end -> grade letter
+    ground: dict[str, str]         # turf/dirt -> grade letter
+    unique: str | None             # unique skill id
+    built_in: list[tuple[str, int]] = field(default_factory=list)   # (skill id, potential level 0-5)
+
+
 @dataclass
 class GameData:
     skills: dict[str, Skill] = field(default_factory=dict)
     track_names: dict[int, str] = field(default_factory=dict)
     champions: dict[int, ChampionsMeeting] = field(default_factory=dict)
+    cards: dict[int, Card] = field(default_factory=dict)
 
     @property
     def skill_data(self) -> dict:
@@ -161,6 +181,44 @@ def _read_champions(con: sqlite3.Connection, track_names: dict[int, str]) -> dic
     return out
 
 
+_CARD_TITLE = 5
+_CHARA_NAME = 6
+
+
+def _read_cards(con: sqlite3.Connection) -> dict[int, Card]:
+    """Playable cards: aptitudes and unique skill from the highest rarity row, built-in skills
+    (available_skill_set: need_rank 0 at the start, 2-5 unlocked by potential level)."""
+    tables = {r[0] for r in con.execute("select name from sqlite_master where type = 'table'")}
+    if not {"card_data", "card_rarity_data", "skill_set", "available_skill_set"} <= tables:
+        return {}
+    titles, chara_names = _texts(con, _CARD_TITLE), _texts(con, _CHARA_NAME)
+    rarity_rows = {}
+    for r in con.execute("select * from card_rarity_data order by card_id, rarity"):
+        rarity_rows[r["card_id"]] = r                  # last = highest rarity
+    built: dict[int, list[tuple[str, int]]] = {}
+    for r in con.execute("select available_skill_set_id, skill_id, need_rank from available_skill_set "
+                         "order by need_rank, skill_id"):
+        built.setdefault(r["available_skill_set_id"], []).append((str(r["skill_id"]), r["need_rank"]))
+    out = {}
+    for c in con.execute("select * from card_data"):
+        rr = rarity_rows.get(c["id"])
+        name = chara_names.get(c["chara_id"])
+        if rr is None or not name:
+            continue
+        unique = con.execute("select skill_id1 from skill_set where id = ?", (rr["skill_set"],)).fetchone()
+        out[c["id"]] = Card(
+            card_id=c["id"], chara_id=c["chara_id"], name=name, title=titles.get(c["id"], ""),
+            default_style=STYLE_IDS.get(c["running_style"]),
+            distance={k: GRADE.get(rr[f"proper_distance_{col}"], "?") for k, col in
+                      (("sprint", "short"), ("mile", "mile"), ("medium", "middle"), ("long", "long"))},
+            style={k: GRADE.get(rr[f"proper_running_style_{col}"], "?") for k, col in
+                   (("front", "nige"), ("pace", "senko"), ("late", "sashi"), ("end", "oikomi"))},
+            ground={k: GRADE.get(rr[f"proper_ground_{k}"], "?") for k in ("turf", "dirt")},
+            unique=str(unique[0]) if unique and unique[0] else None,
+            built_in=built.get(c["available_skill_set_id"], []))
+    return out
+
+
 def load(data_dir: Path) -> GameData:
     """Global database first; JP only fills skill IDs Global lacks."""
     gd = game_dir(data_dir)
@@ -172,6 +230,7 @@ def load(data_dir: Path) -> GameData:
         data.skills = _read_skills(con, "global")
         data.track_names = _texts(con, _TRACK_NAME)
         data.champions = _read_champions(con, data.track_names)
+        data.cards = _read_cards(con)
     if jp_db.is_file():
         with _connect(jp_db) as con:
             for sid, skill in _read_skills(con, "jp").items():
