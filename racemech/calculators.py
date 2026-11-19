@@ -441,3 +441,30 @@ def power_on_course(bl: BotLib, course: Course, power: float | None = None) -> F
                      + f"; about {lost:.1f} m lost over all uphills ({lost / 2.5:.2f} lengths)")
     lines.append("Distance lost = time on the hill x speed loss (an estimate; acceleration not modelled).")
     return Fact("What Power does on this course (computed)", lines, data)
+
+
+# ------------------------------------------------------------- course layout
+
+def course_layout(course: Course) -> Fact:
+    """Phase boundaries and key course points in metres, so the model never derives them."""
+    e = course.entry
+    d = float(e["distance"])
+    p1, p2, p3 = d / 6, 2 * d / 3, 5 * d / 6
+    lines = [
+        f"Course: {course.display}",
+        f"Early-race 0-{p1:.0f} m; mid-race {p1:.0f}-{p2:.0f} m; late-race starts at {p2:.0f} m; "
+        f"last spurt phase {p3:.0f}-{d:.0f} m (finish).",
+        f"Position keeping (sections 1-10) covers 0-{d * 10 / 24:.0f} m; one section = {d / 24:.0f} m.",
+    ]
+    corners = sorted(e.get("corners", []), key=lambda c: c["start"])
+    if corners:
+        last = corners[-1]
+        lines.append("Corners: " + ", ".join(f"{c['start']:.0f}-{c['start'] + c['length']:.0f} m"
+                                             for c in corners)
+                     + f" (final corner {last['start']:.0f}-{last['start'] + last['length']:.0f} m).")
+    final = [s for s in e.get("straights", []) if s["end"] >= d]
+    if final:
+        lines.append(f"Final straight: {final[0]['start']:.0f}-{d:.0f} m "
+                     f"({d - final[0]['start']:.0f} m long).")
+    return Fact("Course layout (metres from the start)", lines,
+                {"p1": p1, "p2": p2, "p3": p3, "distance": d})

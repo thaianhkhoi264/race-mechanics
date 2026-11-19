@@ -64,3 +64,10 @@ def test_to_the_finish_wording():
     out = calc._clear_activates("On the final straight (1,099–1,600 m to the finish) — if you're 2nd")
     assert out == ("On the final straight (from the 1,099 m mark to the finish line at 1,600 m)"
                    " — if you're 2nd")
+
+
+def test_course_layout_cm22(cm22):
+    f = calc.course_layout(cm22)
+    assert f.data["p1"] == pytest.approx(266.7, abs=0.1)
+    assert f.data["p2"] == pytest.approx(1066.7, abs=0.1)
+    assert any(ln.startswith("Final straight:") for ln in f.lines)

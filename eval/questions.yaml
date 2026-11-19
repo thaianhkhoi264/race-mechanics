@@ -160,7 +160,7 @@
 
 - id: decline-unreleased-cm
   category: decline
-  question: What course is CM30 on?
+  question: What course is CM99 on?
   decline: true
 
 # ---- Casual wording: shorthand, slang, typos, greens, "should I buy", named debuffs ----
@@ -429,3 +429,8 @@
 - {id: cov-wit-lb, category: coverage, question: what is wit limit break, keywords: [["1200"], ["gold", "unique"]]}
 - {id: cov-finish-time, category: coverage, question: why do race times look slower than real time, keywords: [["1.18"]]}
 - {id: cov-margins, category: coverage, question: how long is a nose margin, keywords: [["0.2"]]}
+
+# ---- Course layout (#35) ----
+- {id: layout-early-cm22, category: stats, question: when does early race end in cm22, numbers: [{value: 267, tol: 1}]}
+- {id: layout-final-straight-cm21, category: stats, question: how long is the final straight in cm21, numbers: [{value: 412, tol: 1}]}
+- {id: layout-late-cm23, category: stats, question: where does late race start in cm23, numbers: [{value: 1333, tol: 1}]}
