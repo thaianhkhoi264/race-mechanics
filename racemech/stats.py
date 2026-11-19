@@ -67,3 +67,25 @@ def downhill_gain_m(slopes: list[dict], wit: float, speed: float) -> float:
     """Expected metres gained over the given downhills: time on them x share in the mode x boost."""
     share = downhill_mode_share(wit)
     return sum(s["length"] / speed * share * downhill_boost(s["slope"]) for s in slopes)
+
+
+def skill_duration_s(base_duration: float, distance: float) -> float:
+    """Duration = baseDuration/10000 x CourseDistance/1000 (longer on longer courses)."""
+    return base_duration / 10000.0 * distance / 1000.0
+
+
+def speed_carryover(fire_m: float, base_duration: float, distance: float,
+                    speed_bonus: float) -> dict:
+    """
+    Where a speed skill fired at ``fire_m`` ends, and how much of it is still running when
+    late-race (the last spurt) starts at 2/3 of the distance. Same model as the bot_repo codebase's
+    /parent: the runner covers ground at base speed + the skill's own bonus while it lasts.
+    """
+    dur = skill_duration_s(base_duration, distance)
+    speed = base_speed(distance) + speed_bonus
+    end = fire_m + speed * dur
+    late = distance * 2 / 3
+    over_m = max(0.0, end - late) if fire_m < late else 0.0
+    return {"duration_s": dur, "speed": speed, "covers_m": speed * dur, "end_m": end, "late_m": late,
+            "carry_m": min(over_m, speed * dur), "carry_s": min(over_m, speed * dur) / speed,
+            "short_m": max(0.0, late - end)}

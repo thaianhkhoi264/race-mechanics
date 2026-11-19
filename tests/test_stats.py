@@ -31,3 +31,13 @@ def test_downhill_gain():
     hill = [{"start": 100, "length": 775, "slope": -10000}]       # CM21's 1% downhill
     assert stats.downhill_boost(-10000) == pytest.approx(0.4)
     assert stats.downhill_gain_m(hill, 1200, 20.8) == pytest.approx(775 / 20.8 * 0.48 / 0.68 * 0.4)
+
+
+def test_speed_carryover():
+    # 2500 m: base speed 19.5, late-race at 1,666.7 m; +0.35 for baseDuration 40000 -> 10 s
+    c = stats.speed_carryover(1525, 40000, 2500, 0.35)
+    assert c["duration_s"] == pytest.approx(10.0)
+    assert c["end_m"] == pytest.approx(1525 + 19.85 * 10)
+    assert c["carry_m"] == pytest.approx(1723.5 - 2500 * 2 / 3)
+    early = stats.speed_carryover(1000, 40000, 2500, 0.35)
+    assert early["carry_m"] == 0 and early["short_m"] == pytest.approx(2500 * 2 / 3 - 1198.5)
