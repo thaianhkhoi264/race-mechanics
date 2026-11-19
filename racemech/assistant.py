@@ -9,7 +9,7 @@ from importlib import resources
 from racemech.botlib import BotLib
 from racemech.config import Settings
 from racemech.context import Context, ContextBuilder
-from racemech.evaluation import numbers_in
+from racemech.evaluation import numbers_in, unsupported
 from racemech.llm import OllamaClient, Reply
 from racemech.retrieval import build_index
 
@@ -43,6 +43,48 @@ BAD_NEWS_OPENERS = ("Hm, I see...", "I'm afraid this one is bad news...", "Oh de
                     "Let me be honest...")
 
 
+_KEY_LINE = re.compile(r"^- ((?:VERDICT|RECOMMENDATION)[^\n]*)$", re.M)
+_NEGATIVE = re.compile(r"does NOT have enough|short of|not enough|CANNOT ACTIVATE|USELESS", re.I)
+
+
+def required_numbers(context: str) -> list[float]:
+    """Numbers the answer must keep: everything on VERDICT / RECOMMENDATION lines (the facts the
+    voice used to drop), excluding small counts."""
+    out = []
+    for line in _KEY_LINE.findall(context):
+        out += [n for n in numbers_in(line) if not (abs(n) <= 10 and float(n).is_integer())]
+    return out
+
+
+def voice_problems(text: str, context: str, question: str, character_names: set[str]) -> list[str]:
+    """Why a voiced answer can't be used as-is (empty list = fine)."""
+    problems = []
+    if not text.strip():
+        return ["empty answer"]
+    invented = unsupported(text, context, question)
+    if invented:
+        problems.append(f"numbers not in the context: {invented}")
+    have = numbers_in(text)
+    missing = [n for n in required_numbers(context)
+               if not any(abs(n - h) <= max(0.5, abs(n) * 0.01) for h in have)]
+    if missing:
+        problems.append(f"dropped key numbers: {missing}")
+    names = {n for n in character_names if n in text and n not in context and n not in question}
+    if names:
+        problems.append(f"named characters not in the question: {sorted(names)}")
+    return problems
+
+
+# Signs the opening already sounds like her (otherwise code adds an opener).
+_IN_VOICE = re.compile(r"Trainer|Hehe|♪|Oh dear|Oh no|I'm afraid|Let's|Shall we|Of course|Leave it to me|"
+                       r"^(?:Ah|Hm|Oh|Wow|Bravo)\b|Happy to help|Let me", re.M)
+
+
+def _opener(question: str, context: str) -> str:
+    pool = BAD_NEWS_OPENERS if _NEGATIVE.search(context) else OPENERS
+    return pool[zlib.crc32(question.encode("utf-8")) % len(pool)]
+
+
 def tidy_voice(text: str) -> str:
     """No ♪ on bad news or declines; at most one ♪ otherwise."""
     if "♪" not in text:
@@ -64,7 +106,7 @@ class Answer:
     question: str
     context: Context
     reply: Reply
-    voice_path: str = ""          # "rewritten" | "fallback" when a voice is on
+    voice_path: str = ""          # "voiced" | "fallback: <why>" when a voice is on
 
 
 class Assistant:
@@ -78,32 +120,28 @@ class Assistant:
                                    settings.keep_alive, settings.temperature, settings.num_ctx)
         self.reference = mechanics_reference() if settings.full_mechanics else ""
         self.voice = settings.voice if voice is None else voice
-        self.voice_system = voice_prompt(self.voice)
         self.character_names = {c.name for c in self.botlib.game.cards.values()}
         self.system = system_prompt() + self.reference
+        # The voice goes last: it stays salient after the long reference, and the prefix matches the
+        # plain prompt so Ollama's prompt cache serves both.
+        self.voice_system = self.system + voice_prompt(self.voice)
 
     def ask(self, question: str) -> Answer:
         ctx = self.builder.build(question)
         user = f"CONTEXT\n\n{ctx.render()}\n\nQUESTION\n{question}"
-        reply = self.client.chat(self.system, user)
-        answer = Answer(question, ctx, reply)
-        if self.voice:
-            self._apply_voice(answer)
-        return answer
-
-    def _apply_voice(self, answer: Answer) -> None:
-        """Second pass: rewrite the plain answer in the voice. The rewrite is kept only if it has
-        exactly the plain answer's numbers; otherwise the plain answer gets a short in-voice opener."""
-        plain = answer.reply.text
-        pool = BAD_NEWS_OPENERS if _BAD_NEWS.search(plain) else OPENERS
-        opener = pool[zlib.crc32(answer.question.encode("utf-8")) % len(pool)]
-        voiced = self.client.chat(self.voice_system, f"OPENING: {opener}\n\nANSWER\n\n{plain}")
-        answer.reply.seconds += voiced.seconds
-        answer.reply.output_tokens += voiced.output_tokens
-        candidate = tidy_voice(voiced.text)
-        same_numbers = sorted(numbers_in(candidate)) == sorted(numbers_in(plain))
-        new_names = {n for n in self.character_names if n in candidate and n not in plain}
-        if voiced.text and same_numbers and not new_names:
-            answer.reply.text, answer.voice_path = candidate, "rewritten"
-        else:
-            answer.reply.text, answer.voice_path = f"{opener} {plain}", "fallback"
+        if not self.voice:
+            return Answer(question, ctx, self.client.chat(self.system, user))
+        # Answer in the voice in one pass; keep it only if code checks pass, else answer plainly.
+        reply = self.client.chat(self.voice_system, user)
+        text = tidy_voice(reply.text)
+        problems = voice_problems(text, ctx.render() + self.reference, question, self.character_names)
+        if not problems:
+            if not _IN_VOICE.search(text[:160]):
+                text = f"{_opener(question, ctx.render())} {text}"      # always at least an opener
+            reply.text = text
+            return Answer(question, ctx, reply, "voiced")
+        plain = self.client.chat(self.system, user)
+        plain.seconds += reply.seconds
+        plain.output_tokens += reply.output_tokens
+        plain.text = f"{_opener(question, ctx.render())} {plain.text}"
+        return Answer(question, ctx, plain, "fallback: " + "; ".join(problems))

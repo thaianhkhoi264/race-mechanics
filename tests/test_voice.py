@@ -20,3 +20,24 @@ def test_voice_prompts():
     assert "VOICE:" in voice_prompt("persona")
     with pytest.raises(ValueError):
         voice_prompt("nobody")
+
+
+CTX = """## Is this Stamina enough? (precomputed verdict)
+- Effective Stamina: 595
+- VERDICT: effective Stamina 595 vs 556 needed -> enough, 39 to spare.
+- RECOMMENDATION: no need to buy a white recovery."""
+
+
+def test_voice_checks_pass_for_faithful_answer():
+    from racemech.assistant import voice_problems
+    ok = "Of course, Trainer! You have 595 Stamina against 556 needed, so 39 to spare. ♪"
+    assert voice_problems(ok, CTX, "", {"Satono Diamond"}) == []
+
+
+def test_voice_checks_catch_drops_inventions_and_names():
+    from racemech.assistant import voice_problems
+    dropped = "Hehe! Satono Diamond has plenty of Stamina, about 40 extra!"
+    problems = voice_problems(dropped, CTX, "", {"Satono Diamond"})
+    assert any("dropped key numbers" in p for p in problems)
+    assert any("numbers not in the context" in p for p in problems)
+    assert any("named characters" in p for p in problems)
