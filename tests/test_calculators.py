@@ -95,3 +95,11 @@ def test_drain_skill_counts_as_recovery_not_debuff(botlib):
     assert not any(f.title.startswith("Course layout") for f in ctx.facts)    # "late surger" is not a phase
     mile = cb.build("late surger 1000 stam with stamina siphon cm22, enough?")    # Long-only skill
     assert any("Stamina Siphon does not activate" in n for n in mile.notes)
+
+
+def test_speed_carryover_line(botlib):
+    cm20 = botlib.course_for_cm(20)
+    fixed = [ln for ln in calc.skill_on_course(botlib, "110081", cm20).lines if ln.startswith("SPEED CARRYOVER")]
+    assert fixed and "fires at 1,525 m" in fixed[0] and "first 57 m (2.9 s) of late-race" in fixed[0]
+    state = [ln for ln in calc.skill_on_course(botlib, "10071", cm20).lines if ln.startswith("SPEED CARRYOVER")]
+    assert state and "only if it fires after about 1,372 m" in state[0]

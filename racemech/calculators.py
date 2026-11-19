@@ -92,6 +92,9 @@ def skill_on_course(bl: BotLib, sid: str, course: Course, style: str | None = No
             lines.append(when)
         if info["timing"] and not whole_race and info.get("trigger_kind") not in ("state", "random"):
             lines.append(f"Timing: {clear_timing(info['timing'])}")
+        carry = speed_carryover_line(bl, entry, course, info)
+        if carry:
+            lines.append(carry)
         if style_block:
             lines.append("For this runner: USELESS (wrong running style).")
     return Fact(f"Skill: {name}", lines, {"info": info, "sid": sid, "blocked": course_block})
@@ -126,6 +129,61 @@ def when_it_fires(info: dict, distance: float) -> str | None:
         span += (f". On average it fires around the middle, about {mid:,.0f} m ({rel}); it is not "
                  "guaranteed to fire at the start of the window")
     return f"WHEN IT FIRES: {_KIND[kind]}. {span}. Late-race (the last spurt) starts at {late:,.0f} m."
+
+
+_SPEED_TYPES = {21, 22, 27}          # target speed / current speed effects, as the bot's /parent
+
+
+def _speed_alt(bl: BotLib, entry: dict, course: Course) -> tuple[dict, float] | None:
+    """The first alternative that can fire here and its speed bonus (m/s), if it is a speed skill."""
+    for alt in entry.get("alternatives", []):
+        if not bl.describe.evaluate_trigger(alt.get("condition", ""), alt.get("precondition", ""),
+                                            course.entry):
+            continue
+        for e in alt.get("effects", []):
+            if e.get("type") in _SPEED_TYPES and e.get("target", 1) in (1, 2) and e.get("modifier", 0) > 0:
+                return alt, e["modifier"] / 10000
+        return None
+    return None
+
+
+def _carry_text(c: dict) -> str:
+    if c["carry_m"] > 0:
+        return (f"it ends at {c['end_m']:,.0f} m, so it is still active for the first {c['carry_m']:,.0f} m "
+                f"({c['carry_s']:.1f} s) of late-race")
+    return f"it ends at {c['end_m']:,.0f} m, {c['short_m']:,.0f} m before late-race, so none of it carries over"
+
+
+def speed_carryover_line(bl: BotLib, entry: dict, course: Course, info: dict) -> str | None:
+    """SPEED CARRYOVER for a speed skill whose window starts shortly before late-race."""
+    window, kind = info.get("window"), info.get("trigger_kind")
+    found = _speed_alt(bl, entry, course)
+    if not window or not found:
+        return None
+    alt, bonus = found
+    d = float(course.entry["distance"])
+    late = d * 2 / 3
+    start, end = float(window[0]), float(window[1])
+    dur = alt.get("baseDuration", 0)
+    first = stats.speed_carryover(start, dur, d, bonus)
+    best = stats.speed_carryover(min(end, late - 1), dur, d, bonus)   # latest firing before late-race
+    if start >= late - 1 or best["end_m"] < late - 300:
+        return None                     # a plain late-race skill, or far too early to matter
+    head = (f"SPEED CARRYOVER (speed +{bonus:g} m/s for {first['duration_s']:.1f} s, about "
+            f"{first['covers_m']:,.0f} m at {first['speed']:.1f} m/s; late-race starts at {late:,.0f} m): ")
+    if kind == "fixed":
+        return head + f"it fires at {start:,.0f} m; " + _carry_text(first) + "."
+    cutoff = late - first["covers_m"]
+    out = head + f"if it fires at the earliest point ({start:,.0f} m), " + _carry_text(first)
+    if cutoff > start:
+        out += (f". It carries into late-race only if it fires after about {cutoff:,.0f} m; the later "
+                "it fires before late-race, the more of it carries over")
+    if end >= late:
+        out += ("; if it fires at or after the start of late-race, it is simply a speed boost during "
+                "the last spurt")
+    else:
+        out += f"; if it fires at the latest point ({end:,.0f} m), " + _carry_text(best)
+    return out + "."
 
 
 _TIMING = re.compile(r"^(?P<lead>.*?) (?P<off>[\d,]+) m (?P<dir>before late-race|after late-race starts) "

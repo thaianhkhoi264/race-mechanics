@@ -470,3 +470,13 @@
   category: skill
   question: how often does budding blossom actually fire for a late surger in cm23
   keywords: [["no simulation", "don't have", "do not have", "not available", "no data", "isn't available", "no simulation"]]
+
+- id: carry-high-gear-cm20
+  category: skill
+  question: "does Into High Gear carry over into late race in CM20?"
+  keywords: [["yes", "carries", "still active"], ["57"]]
+
+- id: carry-warning-shot-cm22
+  category: skill
+  question: "will warning shot carry speed into the last spurt on cm22?"
+  keywords: [["869"], ["only if", "depends", "not always", "if it fires"]]
