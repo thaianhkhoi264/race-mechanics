@@ -72,6 +72,9 @@ def skill_on_course(bl: BotLib, sid: str, course: Course, style: str | None = No
     if not info["effect"] or course_block:
         why = "; ".join(course_block) if course_block else "its conditions can't be met here"
         lines.append(f"CANNOT ACTIVATE on this course: {why}.")
+        effects = [e for a in entry.get("alternatives", [])[:1] for e in a.get("effects", [])]
+        if effects:
+            lines.append("Effect where it can activate: " + clear_effect(bl.describe.effect_text(effects)))
     else:
         style_block = blockers(entry, course, tracks, style) if style else []
         if style_block:
