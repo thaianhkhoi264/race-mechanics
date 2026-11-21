@@ -29,6 +29,8 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--show-context", action="store_true", help="print what the model was given")
     ctx = sub.add_parser("context", help="show the context for a question without calling the model")
     ctx.add_argument("question", nargs="+")
+    sv = sub.add_parser("serve", help="answer questions for bot_repo over the network")
+    sv.add_argument("--port", type=int, help="port (overrides the setting)")
     ev = sub.add_parser("eval", help="run the evaluation set against one or more models")
     ev.add_argument("--models", help="comma-separated Ollama tags (default: the configured model)")
     ev.add_argument("--only", help="comma-separated question ids")
@@ -52,7 +54,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "config":
         for k, v in vars(settings).items():
-            print(f"{k} = {v}")
+            print(f"{k} = {'(set)' if k == 'serve_token' and v else v}")
         return 0
     if args.command == "sync":
         for item, status in data_sync.sync(settings.data_dir, settings.global_master, settings.jp_master,
@@ -61,6 +63,19 @@ def main(argv: list[str] | None = None) -> int:
                                            sim_source=settings.sim_source,
                                            bot_repo=settings.bot_repo):
             print(f"{item:20} {status}")
+        return 0
+    if args.command == "serve":
+        import logging
+        from racemech.assistant import Assistant
+        from racemech.server import Service, serve
+        logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+        if not settings.serve_token:
+            print("serve_token is not set (racemech.toml or RACEMECH_SERVE_TOKEN); refusing to start.")
+            return 2
+        assistant = Assistant(settings, None, settings.serve_voice)
+        service = Service(assistant, settings.serve_token, settings.serve_max_waiting,
+                          settings.data_dir / "qa_log.jsonl", settings.data_dir)
+        serve(service, settings.serve_host, args.port or settings.serve_port)
         return 0
     if args.command == "context":
         from racemech.assistant import Assistant

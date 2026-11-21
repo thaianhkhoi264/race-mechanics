@@ -14,3 +14,11 @@ temperature = 0.2
 retrieval_k = 5
 full_mechanics = true           # whole mechanics doc in the system prompt
 num_ctx = 16384
+
+# racemech serve (answers for the calling application). Keep the token secret; the bot's
+# the caller holds the same value.
+# serve_host = "0.0.0.0"
+# serve_port = 8000
+# serve_token = "long-random-string"
+# serve_max_waiting = 3
+# serve_voice = "persona"
