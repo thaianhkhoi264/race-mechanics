@@ -99,7 +99,10 @@ def test_drain_skill_counts_as_recovery_not_debuff(botlib):
 
 def test_speed_carryover_line(botlib):
     cm20 = botlib.course_for_cm(20)
-    fixed = [ln for ln in calc.skill_on_course(botlib, "110081", cm20).lines if ln.startswith("SPEED CARRYOVER")]
+    def carry(sid):
+        lines = calc.skill_on_course(botlib, sid, cm20).lines
+        return [ln for ln in lines if ln.startswith("SPEED CARRYOVER")]
+    fixed = carry("110081")
     assert fixed and "fires at 1,525 m" in fixed[0] and "first 57 m (2.9 s) of late-race" in fixed[0]
-    state = [ln for ln in calc.skill_on_course(botlib, "10071", cm20).lines if ln.startswith("SPEED CARRYOVER")]
+    state = carry("10071")
     assert state and "only if it fires after about 1,372 m" in state[0]

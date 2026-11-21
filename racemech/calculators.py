@@ -125,7 +125,8 @@ def when_it_fires(info: dict, distance: float) -> str | None:
     if kind == "random":
         mid = (start + end) / 2
         rel = (f"{mid - late:,.0f} m after late-race starts" if mid > late + 1
-               else f"{late - mid:,.0f} m before late-race starts" if mid < late - 1 else "at late-race start")
+               else f"{late - mid:,.0f} m before late-race starts" if mid < late - 1
+               else "at late-race start")
         span += (f". On average it fires around the middle, about {mid:,.0f} m ({rel}); it is not "
                  "guaranteed to fire at the start of the window")
     return f"WHEN IT FIRES: {_KIND[kind]}. {span}. Late-race (the last spurt) starts at {late:,.0f} m."
@@ -151,7 +152,8 @@ def _carry_text(c: dict) -> str:
     if c["carry_m"] > 0:
         return (f"it ends at {c['end_m']:,.0f} m, so it is still active for the first {c['carry_m']:,.0f} m "
                 f"({c['carry_s']:.1f} s) of late-race")
-    return f"it ends at {c['end_m']:,.0f} m, {c['short_m']:,.0f} m before late-race, so none of it carries over"
+    return (f"it ends at {c['end_m']:,.0f} m, {c['short_m']:,.0f} m before late-race, "
+            "so none of it carries over")
 
 
 def speed_carryover_line(bl: BotLib, entry: dict, course: Course, info: dict) -> str | None:
