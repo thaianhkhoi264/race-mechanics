@@ -51,7 +51,10 @@ def test_stability_and_description():
     stats = simulation.skill_stats("100511", snaps)
     assert stats.history["late"] == pytest.approx([0.38, 0.40])
     text = "\n".join(simulation.describe(stats, snaps[-1]["meta"], ["late"]))
-    assert "fired in 40.0%" in text and "small sample" in text and "38.0% to 40.0%" in text
+    assert "FIRE RATE 40.0%" in text and "did not fire in 60.0%" in text
+    assert "small sample" in text and "38.0% to 40.0%" in text
+    assert "3.0x as often when it fired" in text                  # 30% vs 10%
+    assert "(1,056-1,088 m, around the start of late-race)" in text
     assert "correlation, not cause" in text
 
 

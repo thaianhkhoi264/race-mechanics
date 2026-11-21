@@ -120,6 +120,25 @@ def phase_of(m: float, distance: float) -> str:
     return "last spurt phase"
 
 
+def _ratio_text(st: StyleStats) -> str:
+    if st.win_active and st.win_inactive:
+        r = st.win_active / st.win_inactive
+        if r >= 1.2:
+            return f" Owners won {r:.1f}x as often when it fired as when it did not."
+        if r <= 1 / 1.2:
+            return f" Owners won {1 / r:.1f}x as often when it did NOT fire as when it fired."
+    return ""
+
+
+def _span_phase(lo: float, hi: float, distance: float) -> str:
+    a, b = phase_of(lo, distance), phase_of(hi - 0.01, distance)
+    if a == b:
+        return a
+    if b == "late-race":
+        return "around the start of late-race"
+    return f"{a} into {b}"
+
+
 def _pct(x: float | None) -> str:
     return "n/a" if x is None else f"{x * 100:.1f}%"
 
@@ -136,16 +155,19 @@ def describe(stats: SkillStats, meta: dict, styles: list[str] | None = None) -> 
         st = stats.styles[s]
         name = STYLE_NAME[s]
         small = " (small sample, treat with care)" if st.owned < MIN_SAMPLE else ""
-        lines.append(f"{name}: owned in {st.owned:,} runner-races; fired in {_pct(st.rate)}{small}. Won "
-                     f"{_pct(st.win_active)} when it fired, {_pct(st.win_inactive)} when owned but it did "
-                     f"not fire, {_pct(st.win_without)} without it.")
+        lines.append(f"{name}: FIRE RATE {_pct(st.rate)}: of {st.owned:,} simulated races where a {name} "
+                     f"had this skill, it fired in {_pct(st.rate)} and did not fire in "
+                     f"{_pct(1 - st.rate)}{small}.")
+        lines.append(f"{name} WIN RATE: {_pct(st.win_active)} when it fired, {_pct(st.win_inactive)} when "
+                     f"they had it but it did not fire, {_pct(st.win_without)} for {name}s without it."
+                     + _ratio_text(st))
         if st.earliest_m is not None:
             d = stats.distance
-            lines.append(f"{name} timing: earliest at about {st.earliest_m:.0f} m "
-                         f"({phase_of(st.earliest_m, d)}), where {_pct(st.share_earliest)} of activations "
-                         f"happen; median position {st.median_m:.0f} m ({phase_of(st.median_m, d)}). "
-                         f"Won {_pct(st.win_early)} when it fired at the earliest point vs "
-                         f"{_pct(st.win_later)} when it fired later.")
+            lo, hi = st.earliest_m, st.earliest_m + d / 100 * 2       # earliest bucket + the next 1%
+            lines.append(f"{name} timing: {_pct(st.share_earliest)} of activations happen in its earliest "
+                         f"stretch ({lo:,.0f}-{hi:,.0f} m, {_span_phase(lo, hi, d)}); median position "
+                         f"{st.median_m:,.0f} m ({phase_of(st.median_m, d)}). Won {_pct(st.win_early)} when "
+                         f"it fired in that earliest stretch vs {_pct(st.win_later)} when it fired later.")
         hist = stats.history.get(s, [])
         if len(hist) > 1:
             lines.append(f"{name} stability: fire rate {_pct(min(hist))} to {_pct(max(hist))} across "
