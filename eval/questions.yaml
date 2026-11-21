@@ -96,7 +96,7 @@
 - id: cm21-shadow-break
   category: skill
   question: What does Shadow Break do in CM21?
-  keywords: [["0.45"], ["0.35"], ["blocked"]]
+  keywords: [["0.45"], ["0.35"], ["blocked", "block"]]
 
 - id: guts-uses
   category: mechanics
@@ -479,4 +479,10 @@
 - id: carry-warning-shot-cm22
   category: skill
   question: "will warning shot carry speed into the last spurt on cm22?"
-  keywords: [["869"], ["only if", "depends", "not always", "if it fires"]]
+  keywords: [["869", "997", "69 m"], ["only if", "depends", "not always", "if it fires", "earliest"]]
+
+- id: sim-budding-verdict-cm22
+  category: skill
+  question: "is budding blossom good for a late surger in cm22?"
+  keywords: [["26.9"], ["8.1"], ["good", "excellent", "strong", "worth"]]
+  forbid: ["not recommended", "contradicts", "should avoid being blocked", "owned in 31.9", "own this skill in about 31.9"]
