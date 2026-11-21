@@ -66,6 +66,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "serve":
         import logging
+
         from racemech.assistant import Assistant
         from racemech.server import Service, serve
         logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")

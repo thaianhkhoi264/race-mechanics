@@ -19,7 +19,7 @@ import json
 import logging
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -56,7 +56,8 @@ class Service:
         if self.data_dir is not None:
             master = self.data_dir / "game" / "global_master.mdb"
             if master.is_file():
-                synced = datetime.fromtimestamp(master.stat().st_mtime, timezone.utc).isoformat(timespec="seconds")
+                mtime = datetime.fromtimestamp(master.stat().st_mtime, UTC)
+                synced = mtime.isoformat(timespec="seconds")
         return {"ok": True, "model": self.assistant.client.model,
                 "model_ready": self.assistant.client.available(), "waiting": self.waiting,
                 "data_synced": synced}
@@ -93,7 +94,7 @@ class Service:
     def _log(self, question: str, asker: str, out: dict) -> None:
         if self.log_path is None:
             return
-        row = {"time": datetime.now(timezone.utc).isoformat(timespec="seconds"), "asker": asker,
+        row = {"time": datetime.now(UTC).isoformat(timespec="seconds"), "asker": asker,
                "question": question, **out}
         try:
             self.log_path.parent.mkdir(parents=True, exist_ok=True)

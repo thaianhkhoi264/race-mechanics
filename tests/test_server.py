@@ -54,7 +54,8 @@ def test_validation():
 
 
 def test_model_down_and_crash():
-    assert Service(FakeAssistant(fail=ModelUnavailable("off")), "t").ask("q") == (503, {"error": "model_unavailable"})
+    down = Service(FakeAssistant(fail=ModelUnavailable("off")), "t")
+    assert down.ask("q") == (503, {"error": "model_unavailable"})
     assert Service(FakeAssistant(fail=KeyError("x")), "t").ask("q") == (500, {"error": "internal"})
 
 
