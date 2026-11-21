@@ -90,7 +90,9 @@ Running it unattended on Windows: `scripts/racemech-hidden.vbs <command>` runs `
 from the repo root with no console window and appends the output to `data/<command>.log`.
 
 - At logon: a shortcut in the Startup folder (`shell:startup`) to
-  `wscript.exe "<path>ace-mechanics\scriptsacemech-hidden.vbs" serve`
+  `wscript.exe "<repo>\scripts\racemech-hidden.vbs" serve`
+ace-mechanics\scripts
+acemech-hidden.vbs" serve`
   (logon-triggered scheduled tasks need admin rights; the Startup folder doesn't).
 - Start or restart by hand: Task Scheduler entry `racemech\serve` (same command, run on demand:
   `schtasks /Run /TN "racemech\serve"`); stop the old one first (end the `python.exe` serving
