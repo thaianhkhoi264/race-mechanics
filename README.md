@@ -86,6 +86,18 @@ racemech serve                  # listens on serve_host:serve_port (default 0.0.
   PC is off, the bot's health check times out and it says the same.
 - Questions and answers are appended to `data/qa_log.jsonl` (on the PC only) as eval material.
 
+Running it unattended on Windows: `scripts/racemech-hidden.vbs <command>` runs `racemech <command>`
+from the repo root with no console window and appends the output to `data/<command>.log`.
+
+- At logon: a shortcut in the Startup folder (`shell:startup`) to
+  `wscript.exe "<path>ace-mechanics\scriptsacemech-hidden.vbs" serve`
+  (logon-triggered scheduled tasks need admin rights; the Startup folder doesn't).
+- Start or restart by hand: Task Scheduler entry `racemech\serve` (same command, run on demand:
+  `schtasks /Run /TN "racemech\serve"`); stop the old one first (end the `python.exe` serving
+  port 8000).
+- Daily sync: Task Scheduler entry `racemech\sync` at 11:30 local time (16:30 UTC in EST, after
+  the bot_repo codebase's 16:00 UTC simulation download).
+
 ## Evaluation
 
 `eval/questions.yaml` holds questions with checkable expectations (numbers within a
