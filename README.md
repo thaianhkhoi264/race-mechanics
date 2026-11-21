@@ -71,6 +71,21 @@ mechanics doc too.
 
 If Ollama isn't running the commands print an "unavailable" message instead of answering.
 
+## Serving bot_repo
+
+`racemech serve` answers questions for bot_repo (a chat channel and direct messages) over the network, in the persona's voice:
+
+```
+racemech serve                  # listens on serve_host:serve_port (default 0.0.0.0:8000)
+```
+
+- `GET /health` and `POST /ask {"question", "asker"}`; every request needs
+  `Authorization: Bearer <serve_token>` (set in `racemech.toml`; the caller holds the same value). The server refuses to start without a token.
+- One answer at a time; more than `serve_max_waiting` queued questions get 503 `busy`. If Ollama is
+  down, `/ask` returns 503 `model_unavailable` and the caller says it can't answer right now; if the
+  PC is off, the bot's health check times out and it says the same.
+- Questions and answers are appended to `data/qa_log.jsonl` (on the PC only) as eval material.
+
 ## Evaluation
 
 `eval/questions.yaml` holds questions with checkable expectations (numbers within a

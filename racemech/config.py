@@ -47,6 +47,13 @@ class Settings:
     sim_source: str = "<host>:<path>"
     # Model context window in tokens.
     num_ctx: int = 16384
+    # `racemech serve` (bot_repo asks questions over the LAN). The token is a shared secret
+    # the bot sends as "Authorization: Bearer <token>"; the server won't start without one.
+    serve_host: str = "0.0.0.0"
+    serve_port: int = 8000
+    serve_token: str = ""
+    serve_max_waiting: int = 3
+    serve_voice: str = "persona"
 
 
 def _coerce(raw, default):
