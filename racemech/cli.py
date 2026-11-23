@@ -48,6 +48,15 @@ def _print_answer(ans, show_context: bool) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    from racemech.botlib import BotLibError
+    try:
+        return _main(argv)
+    except (BotLibError, FileNotFoundError) as exc:     # missing setting / checkout / synced data
+        print(f"racemech: {exc}", file=sys.stderr)
+        return 2
+
+
+def _main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     settings = load_settings()

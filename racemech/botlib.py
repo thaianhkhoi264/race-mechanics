@@ -40,8 +40,8 @@ class Course:
 
 
 class BotLib:
-    def __init__(self, bot_repo: Path, data_dir: Path):
-        self.bot_repo = Path(bot_repo)
+    def __init__(self, bot_repo: Path | None, data_dir: Path):
+        self.bot_repo = Path(bot_repo) if bot_repo else None
         self.data_dir = Path(data_dir)
         self._loaded = False
 
@@ -50,6 +50,9 @@ class BotLib:
     def load(self) -> BotLib:
         if self._loaded:
             return self
+        if self.bot_repo is None:
+            raise BotLibError("bot_repo is not set: point it at a bot_repo checkout in racemech.toml "
+                              "or RACEMECH_BOT_REPO")
         if not (self.bot_repo / "skill_describe.py").is_file():
             raise BotLibError(f"bot_repo checkout not found at {self.bot_repo} (set bot_repo)")
         try:
