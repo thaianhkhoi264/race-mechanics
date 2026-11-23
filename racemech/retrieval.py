@@ -59,10 +59,10 @@ def load_markdown_sections(directory: Path = KNOWLEDGE_DIR) -> list[Doc]:
     for path in sorted(directory.glob("*.md")):
         title, buf = None, []
         for line in path.read_text(encoding="utf-8").splitlines():
-            if line.startswith("## "):
+            if line.startswith("## ") or line.startswith("# "):     # a top-level heading ends a section
                 if title:
                     docs.append(Doc(path.stem, title, "\n".join(buf).strip()))
-                title, buf = line[3:].strip(), []
+                title, buf = (line[3:].strip() if line.startswith("## ") else None), []
             elif title:
                 buf.append(line)
         if title:
