@@ -77,3 +77,33 @@ def test_global_wins_and_jp_only_fills_gaps(data_dir):
 def test_missing_global_db_is_an_error(tmp_path):
     with pytest.raises(FileNotFoundError):
         gamedata.load(tmp_path)
+
+
+def test_load_closes_the_databases(tmp_path, monkeypatch):
+    """`racemech sync` replaces the .mdb files while serve runs; an open handle blocks that on Windows."""
+    import sqlite3
+
+    from racemech import gamedata
+    opened = []
+    real = gamedata._connect
+
+    def spy(path):
+        con = real(path)
+        opened.append(con)
+        return con
+
+    monkeypatch.setattr(gamedata, "_connect", spy)
+    db = tmp_path / "game" / "global_master.mdb"
+    db.parent.mkdir()
+    sqlite3.connect(db).close()
+    try:
+        gamedata.load(tmp_path)
+    except sqlite3.Error:
+        pass                                  # empty database: the tables are missing
+    assert opened
+    for con in opened:
+        try:
+            con.execute("select 1")
+            raise AssertionError("connection left open")
+        except sqlite3.ProgrammingError:
+            pass                              # closed, as it should be
