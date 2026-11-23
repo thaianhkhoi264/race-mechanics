@@ -19,6 +19,7 @@ already consume:
 from __future__ import annotations
 
 import sqlite3
+from contextlib import closing
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -226,13 +227,13 @@ def load(data_dir: Path) -> GameData:
     if not global_db.is_file():
         raise FileNotFoundError(f"{global_db} missing; run `racemech sync` with the Global game installed")
     data = GameData()
-    with _connect(global_db) as con:
+    with closing(_connect(global_db)) as con:
         data.skills = _read_skills(con, "global")
         data.track_names = _texts(con, _TRACK_NAME)
         data.champions = _read_champions(con, data.track_names)
         data.cards = _read_cards(con)
     if jp_db.is_file():
-        with _connect(jp_db) as con:
+        with closing(_connect(jp_db)) as con:
             for sid, skill in _read_skills(con, "jp").items():
                 data.skills.setdefault(sid, skill)
     return data

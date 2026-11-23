@@ -104,8 +104,9 @@ from the repo root with no console window and appends the output to `data/<comma
 - Start or restart by hand: Task Scheduler entry `racemech\serve` (same command, run on demand:
   `schtasks /Run /TN "racemech\serve"`); stop the old one first (end the `python.exe` serving
   port 8000).
-- Daily sync: Task Scheduler entry `racemech\sync` at 11:30 local time (16:30 UTC in EST, after
-  the bot_repo codebase's 16:00 UTC simulation download).
+- Sync at logon: a second Startup-folder shortcut runs the same script with `sync` (a fixed daily
+  time missed whenever the PC was off then). It can replace the game databases while `serve` is
+  running, because loading them doesn't keep them open.
 
 ## Evaluation
 
