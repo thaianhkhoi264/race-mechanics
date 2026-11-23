@@ -43,8 +43,9 @@ ollama pull qwen3.5:9b-q4_K_M
 ```
 
 Settings come from `racemech.toml` (copy `racemech.example.toml`) or `RACEMECH_*` environment
-variables; `racemech config` prints the effective values. Run `racemech sync` again after a game
-update.
+variables; `racemech config` prints the effective values. Nothing machine-specific is built in:
+set at least `bot_repo` (a bot_repo checkout) and `global_master` (the Global client's
+`master.mdb`) before the first `racemech sync`. Run `racemech sync` again after a game update.
 
 ## Use
 
@@ -90,9 +91,7 @@ Running it unattended on Windows: `scripts/racemech-hidden.vbs <command>` runs `
 from the repo root with no console window and appends the output to `data/<command>.log`.
 
 - At logon: a shortcut in the Startup folder (`shell:startup`) to
-  `wscript.exe "<repo>\scripts\racemech-hidden.vbs" serve`
-ace-mechanics\scripts
-acemech-hidden.vbs" serve`
+  `wscript.exe "<repo>\scripts\racemech-hidden.vbs" serve`, where `<repo>` is this checkout
   (logon-triggered scheduled tasks need admin rights; the Startup folder doesn't).
 - Start or restart by hand: Task Scheduler entry `racemech\serve` (same command, run on demand:
   `schtasks /Run /TN "racemech\serve"`); stop the old one first (end the `python.exe` serving

@@ -145,11 +145,14 @@ def _atomic_copy(src: Path, dest: Path) -> int:
     return dest.stat().st_size
 
 
-def sync(data_dir: Path, global_master: Path, jp_master: Path | None,
+def sync(data_dir: Path, global_master: Path | None, jp_master: Path | None,
          download_courses: bool = True, timeout: float = 60.0,
          cards_source: str = "", sim_source: str = "",
          bot_repo: Path | None = None) -> list[tuple[str, str]]:
     """Returns (item, status) lines."""
+    if global_master is None:
+        raise FileNotFoundError("global_master is not set: point it at the Global client's master.mdb "
+                                "in racemech.toml or RACEMECH_GLOBAL_MASTER")
     out: list[tuple[str, str]] = []
     gd = game_dir(data_dir)
     gd.mkdir(parents=True, exist_ok=True)

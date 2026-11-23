@@ -1,11 +1,18 @@
-# Copy to racemech.toml (gitignored) and adjust. Every key is optional;
-# environment variables RACEMECH_<KEY> override this file.
+# Copy to racemech.toml (gitignored) and fill in the <placeholders>. Every key is optional
+# except where a command needs it (it says which). Environment variables RACEMECH_<KEY>
+# override this file.
 
-bot_repo = '<bot_repo path>'   # read-only; its calculator modules are reused
-# data_dir = '<repo>\data'
-# Game databases (Global is the source of truth; JP only fills skills Global lacks)
-# global_master = '<path to the Global client>'
-# jp_master = '<path to the JP client's master.mdb>'
+# Machine-specific paths (nothing like this is built in)
+bot_repo = "<path to a bot_repo checkout>"          # read-only; its calculator modules are reused
+global_master = "<path to the Global client's master.mdb>"  # copied by `racemech sync`
+# jp_master = "<path to the JP client's master.mdb>"       # optional; fills skills Global lacks
+# data_dir = "data"                                         # default: data/ in this repo (gitignored)
+
+# Optional copy sources for `racemech sync` (scp host:path or a local path); empty = download
+# cards_source = "<host>:<path>/character-cards.json"
+# sim_source = "<host>:<path>/data/simulations"
+
+# Model
 ollama_url = "http://localhost:11434"
 model = "qwen3.5:9b-q4_K_M"     # qwen3.5:4b-q4_K_M is faster but less accurate
 timeout_s = 120
@@ -19,6 +26,6 @@ num_ctx = 16384
 # the caller holds the same value.
 # serve_host = "0.0.0.0"
 # serve_port = 8000
-# serve_token = "long-random-string"
+# serve_token = "<long random string>"
 # serve_max_waiting = 3
 # serve_voice = "persona"
