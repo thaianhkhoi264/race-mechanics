@@ -465,7 +465,7 @@
 - id: sim-budding-late-cm22
   category: skill
   question: how often does budding blossom actually fire for a late surger in cm22
-  keywords: [["simulat"], ["31.9"]]
+  keywords: [["simulat"], ["%"], ["fire", "fired", "fires"]]
 - id: sim-no-data-cm23
   category: skill
   question: how often does budding blossom actually fire for a late surger in cm23
@@ -484,5 +484,5 @@
 - id: sim-budding-verdict-cm22
   category: skill
   question: "is budding blossom good for a late surger in cm22?"
-  keywords: [["26.9"], ["8.1"], ["good", "excellent", "strong", "worth"]]
+  keywords: [["when it fired", "when it fires", "it fired", "fired"], ["did not fire", "didn't fire", "not fire", "not firing", "without"], ["good", "excellent", "strong", "worth"]]
   forbid: ["not recommended", "contradicts", "should avoid being blocked", "owned in 31.9", "own this skill in about 31.9"]
