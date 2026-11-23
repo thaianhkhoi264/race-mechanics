@@ -3,6 +3,14 @@
 A local question-answering assistant for Uma Musume (Global) skills and race mechanics,
 running entirely on your own PC.
 
+> **Readable, not runnable on its own.** race-mechanics imports calculator modules (skill
+> trigger windows, the stamina model, CM course lookup, simulation snapshot reading) from a
+> bot_repo codebase checkout at runtime
+> (`bot_repo` setting), and answers from game data that `racemech sync` copies from your own
+> game client; neither is part of this repo. Without them the code, knowledge files, prompts
+> and eval are all here to read, and the tests that need them skip themselves, but
+> `racemech ask` / `serve` / `eval` won't start.
+
 The language model never does the maths. Every question goes through three steps:
 
 1. **Understand** (code): skill names including typos and community shorthand (OYL, PTTM, GW,
@@ -10,8 +18,8 @@ The language model never does the maths. Every question goes through three steps
    counts ("2 subdued"), and intent ("has X" vs "should I buy X"). Ambiguities become explicit
    notes ("0.35 recovery" -> 3.5%; unspecified tiers -> ○). Aliases live in
    `racemech/knowledge/aliases.yaml`; acronyms of multi-word skill names are generated.
-2. **Compute and retrieve** (code): skill trigger windows on the CM's course, acceleration
-   ratings, the Stamina/HP model (green Stamina skills added, named debuffs sized from game data,
+2. **Compute and retrieve** (code): skill trigger windows on the CM's course, speed
+   carryover, CM simulation numbers (simulation), the Stamina/HP model (green Stamina skills added, named debuffs sized from game data,
    with/without comparisons and a precomputed verdict and recommendation), plus the most relevant passages of a curated mechanics
    knowledge pack (BM25 keyword search, no model).
 3. **Phrase** (one call to a local model via Ollama), told to use only numbers from that
