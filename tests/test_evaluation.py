@@ -34,3 +34,15 @@ def test_question_file_is_well_formed():
 def test_multiplier_numbers_are_parsed():
     assert numbers_in("target speed x0.915 otherwise; 1.6x; ab1") == [0.915, 1.6]
     assert unsupported("drops to 91.5% of normal", "target speed x0.915 otherwise", "") == []
+
+
+def test_results_markdown_has_totals_categories_and_failures_but_no_answers():
+    from racemech.evaluation import Score, failed_rows, results_markdown, summary
+    scores = [Score("a", "skill", True, seconds=4.0, answer="secret answer text"),
+              Score("b", "coverage", False, ["missing one of ['0.8']"], seconds=5.0, answer="x"),
+              Score("c", "coverage", False, [], [1.5], seconds=3.0)]
+    md = results_markdown([(summary("m:1b", scores), failed_rows(scores))], "abc1234", "2026-11-23 03:00")
+    assert "| m:1b | 1/3 | 1 | 4.0 |" in md and "commit `abc1234`" in md
+    assert "| coverage | 0/2 |" in md and "| skill | 1/1 |" in md
+    assert "- `b`: missing one of ['0.8']" in md and "- `c`: invented numbers" in md
+    assert "secret answer text" not in md

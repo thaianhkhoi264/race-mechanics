@@ -121,3 +121,46 @@ def write_report(model: str, scores: list[Score], out_dir: Path) -> Path:
     path.write_text(json.dumps({"summary": summary(model, scores), "results": [asdict(s) for s in scores]},
                                ensure_ascii=False, indent=2), encoding="utf-8")
     return path
+
+
+RESULTS = REPO_ROOT / "eval" / "RESULTS.md"
+
+
+def results_markdown(runs: list[tuple[dict, list[dict]]], commit: str = "", when: str = "") -> str:
+    """The committed eval summary: per model, totals, categories and the ids that failed.
+    ``runs``: (summary(), failed rows as {"id", "failures"}) per model. No model answers are
+    included (those stay in the gitignored reports/)."""
+    when = when or time.strftime("%Y-%m-%d %H:%M")
+    at = f", commit `{commit}`" if commit else ""
+    lines = ["# Eval results", "",
+             f"Latest full run of `racemech eval` ({when}{at}).",
+             "Rewritten by every full run; per-question answers stay in the gitignored `reports/`.", "",
+             "| Model | Passed | Invented numbers | Median s |", "|---|---|---|---|"]
+    for s, _ in runs:
+        lines.append(f"| {s['model']} | {s['passed']}/{s['total']} | {s['with_invented_numbers']} "
+                     f"| {s['median_seconds']:.1f} |")
+    for s, failed in runs:
+        lines += ["", f"## {s['model']}", "", "| Category | Passed |", "|---|---|"]
+        lines += [f"| {c} | {v} |" for c, v in s["by_category"].items()]
+        lines += ["", "Failed:" if failed else "Failed: none"]
+        lines += [f"- `{f['id']}`: {'; '.join(f['failures'])}" for f in failed]
+    return "\n".join(lines) + "\n"
+
+
+def failed_rows(scores: list[Score]) -> list[dict]:
+    return [{"id": s.id, "failures": s.failures or ["invented numbers"]} for s in scores if not s.passed]
+
+
+def _commit() -> str:
+    import subprocess
+    try:
+        out = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True,
+                             cwd=REPO_ROOT, timeout=10)
+        return out.stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
+def write_results(runs: list[tuple[dict, list[dict]]], path: Path = RESULTS) -> Path:
+    path.write_text(results_markdown(runs, _commit()), encoding="utf-8")
+    return path

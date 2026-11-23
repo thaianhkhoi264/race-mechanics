@@ -98,7 +98,7 @@ def _main(argv: list[str] | None = None) -> int:
         models = args.models.split(",") if args.models else [settings.model]
         only = set(args.only.split(",")) if args.only else None
         questions = evaluation.load_questions()
-        summaries = []
+        summaries, runs = [], []
         for model in models:
             assistant = Assistant(settings, model.strip(), args.voice)
             if not assistant.client.available():
@@ -108,7 +108,11 @@ def _main(argv: list[str] | None = None) -> int:
             scores = evaluation.run(assistant, questions, only)
             path = evaluation.write_report(model, scores, REPO_ROOT / "reports")
             summaries.append(evaluation.summary(model, scores))
+            runs.append((summaries[-1], evaluation.failed_rows(scores)))
             print(f"report: {path}")
+        if only is None:                        # a full run rewrites the committed summary
+            evaluation.write_results(runs)
+            print(f"summary: {evaluation.RESULTS}")
         print("\nmodel".ljust(66) + "passed  invented  median s  by category")
         for s in summaries:
             print(f"{s['model']:65} {s['passed']:>2}/{s['total']:<3} {s['with_invented_numbers']:>6}"
