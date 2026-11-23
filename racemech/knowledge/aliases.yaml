@@ -1,9 +1,10 @@
 # Community shorthand for skills. alias (lowercase) -> exact Global skill name.
 # Tier families (◎/○/×) use the base name; the matcher picks ○ unless the user says otherwise.
 #
-# Sources: the uma.guide community glossary (https://uma.guide/guides/glossary) for the entries
-# marked [glossary]; the rest are common forms of the same kind. Acronyms of multi-word names
-# (pttm, oyl, thh, ...) are generated automatically and need no entry here.
+# Credit: the entries marked [glossary] come from the uma.guide community glossary
+# (https://uma.guide/guides/glossary); thanks to its authors. The rest are common forms of the
+# same kind. Acronyms of multi-word names (pttm, oyl, thh, ...) are generated automatically and
+# need no entry here.
 #
 # family: entries resolve to one of several skills by the asker's running style
 # ("subdued" -> "Subdued Late Surgers" for a Late Surger). {styles} is the plural style name.
