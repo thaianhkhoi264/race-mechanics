@@ -1,21 +1,21 @@
 # Eval results
 
-Latest full run of `racemech eval` (2026-11-23 04:40, commit `97cc82b`).
+Latest full run of `racemech eval` (2026-11-23 18:47, commit `9fd8644`).
 Rewritten by every full run; per-question answers stay in the gitignored `reports/`.
 
 | Model | Passed | Invented numbers | Median s |
 |---|---|---|---|
-| qwen3.5:9b-q4_K_M | 136/141 | 3 | 4.4 |
+| qwen3.5:9b-q4_K_M | 136/141 | 3 | 4.5 |
 
 ## qwen3.5:9b-q4_K_M
 
 | Category | Passed |
 |---|---|
-| casual | 15/16 |
-| characters | 4/4 |
-| coverage | 56/58 |
+| casual | 16/16 |
+| characters | 3/4 |
+| coverage | 55/58 |
 | decline | 6/6 |
-| general | 12/14 |
+| general | 13/14 |
 | mechanics | 9/9 |
 | skill | 17/17 |
 | stamina | 8/8 |
@@ -23,8 +23,8 @@ Rewritten by every full run; per-question answers stay in the gitignored `report
 | strategy | 1/1 |
 
 Failed:
-- `casual-kanata`: missing number 550±0
-- `general-pace-down`: missing one of ['0.945']
-- `general-stamina-hp`: missing one of ['0.8']
-- `cov-block`: missing one of ['2 m', '2m', '2 meters', '2 metres']
+- `general-pace-down`: missing one of ['0.6', '60%', 'hp use', 'less hp', 'saves hp']
+- `cov-straight-random`: missing one of ['equal', 'same chance', 'regardless']
 - `cov-spot-struggle`: missing one of ['guts']
+- `cov-stamina-keep`: missing one of ['1.035', '1.04']
+- `char-ny-dia-cm24`: missing one of ['late surger']
