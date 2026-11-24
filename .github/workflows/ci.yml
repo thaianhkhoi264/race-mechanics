@@ -18,5 +18,5 @@ jobs:
       - name: Lint
         run: ruff check .
       - name: Test
-        # Integration (bot checkout + data) and LLM (Ollama) tests skip themselves here.
+        # Integration (bot_repo codebase + data) and LLM (Ollama) tests skip themselves here.
         run: pytest -q

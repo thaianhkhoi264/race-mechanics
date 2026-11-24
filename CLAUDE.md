@@ -6,7 +6,7 @@ This repo must stay safe to make public at any time, so nothing that belongs to
 the game or to the community ever enters it.
 
 - **No game data in the repo or in its history.** That means `master.mdb` copies,
-  extracted skill/course/character JSON, simulation logs snapshots, the character database dumps, and
+  extracted skill/course/character JSON, simulation snapshots, community-site dumps, and
   anything else `racemech sync` fetches. Sync writes into a gitignored data
   directory; it is never committed.
 - **`racemech/knowledge/*.md` must be our own writing.** If a passage was copied
@@ -27,6 +27,6 @@ the game or to the community ever enters it.
 ## Repo conventions
 
 - Keep `pyproject.toml` as the single source of dependencies and entry points.
-- Tests that need the bot_repo checkout, synced data, or a running Ollama
+- Tests that need the bot_repo codebase, synced data, or a running Ollama
   must stay behind the `integration` / `llm` markers and skip cleanly without them.
 - Run `ruff` before committing.
