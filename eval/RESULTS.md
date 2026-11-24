@@ -1,17 +1,17 @@
 # Eval results
 
-Latest full run of `racemech eval` (2026-11-23 22:46, commit `ee0ee0a`).
+Latest full run of `racemech eval` (2026-11-24 01:57, commit `1e6cf05`).
 Rewritten by every full run; per-question answers stay in the gitignored `reports/`.
 
 | Model | Passed | Invented numbers | Median s |
 |---|---|---|---|
-| qwen3.5:9b-q4_K_M | 139/141 | 1 | 3.6 |
+| qwen3.5:9b-q4_K_M | 138/141 | 1 | 3.7 |
 
 ## qwen3.5:9b-q4_K_M
 
 | Category | Passed |
 |---|---|
-| casual | 16/16 |
+| casual | 15/16 |
 | characters | 4/4 |
 | coverage | 56/58 |
 | decline | 6/6 |
@@ -23,5 +23,6 @@ Rewritten by every full run; per-question answers stay in the gitignored `report
 | strategy | 1/1 |
 
 Failed:
+- `casual-inherited-typo`: missing number 89±2; missing one of ['3.5', '0.035']
 - `cov-straight-random`: missing one of ['equal', 'same chance', 'regardless']
 - `cov-stamina-keep`: missing one of ['1.035', '1.04']
