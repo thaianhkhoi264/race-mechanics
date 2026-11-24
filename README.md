@@ -11,6 +11,14 @@ running entirely on your own PC.
 > and eval are all here to read, and the tests that need them skip themselves, but
 > `racemech ask` / `serve` / `eval` won't start.
 
+**Knowledge files are our own writing.** `racemech/knowledge/` (mechanics, glossary, skills,
+strategy) is written in our own words. The mechanics formulas and constants come from community
+reverse-engineering, mainly KuromiAK's
+[Uma Musume Race Mechanics](https://docs.google.com/document/d/15VzW9W2tXBBTibBRbZ8IVpW6HaMX8H0RP03kq6Az7Xg/)
+document (building on work by @umamusu_reveng, @kak_eng and @hoffe_33); the glossary's terms were
+collected with the help of the [uma.guide glossary](https://uma.guide/guides/glossary). No game
+data is included: it's copied from your own game client by `racemech sync`.
+
 The language model never does the maths. Every question goes through three steps:
 
 1. **Understand** (code): skill names including typos and community shorthand (OYL, PTTM, GW,
@@ -131,3 +139,8 @@ Reports are written to `reports/` (gitignored).
 
 Tests that need the bot checkout and synced data are marked `integration` and skip themselves
 when unavailable (as in CI).
+
+## License
+
+MIT, see [LICENSE](LICENSE). Uma Musume and its game data belong to Cygames; this project is
+unofficial and ships none of that data.
