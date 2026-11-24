@@ -106,15 +106,15 @@ racemech serve                  # listens on serve_host:serve_port (default 0.0.
 Running it unattended on Windows: `scripts/racemech-hidden.vbs <command>` runs `racemech <command>`
 from the repo root with no console window and appends the output to `data/<command>.log`.
 
-- At logon: a shortcut in the Startup folder (`shell:startup`) to
-  `wscript.exe "<repo>\scripts\racemech-hidden.vbs" serve`, where `<repo>` is this checkout
-  (logon-triggered scheduled tasks need admin rights; the Startup folder doesn't).
-- Start or restart by hand: Task Scheduler entry `racemech\serve` (same command, run on demand:
-  `schtasks /Run /TN "racemech\serve"`); stop the old one first (end the `python.exe` serving
-  port 8000).
-- Sync at logon: a second Startup-folder shortcut runs the same script with `sync` (a fixed daily
-  time missed whenever the PC was off then). It can replace the game databases while `serve` is
-  running, because loading them doesn't keep them open.
+- At logon: one shortcut in the Startup folder (`shell:startup`) to
+  `wscript.exe "<repo>\scripts\racemech-logon.vbs"`, where `<repo>` is this checkout. It runs
+  `sync` first and starts `serve` only once sync has finished, so serve never loads yesterday's
+  data; if sync fails (offline, remote host down) serve still starts with the last good data.
+  (Logon-triggered scheduled tasks need admin rights; the Startup folder doesn't.)
+- Start or restart by hand: Task Scheduler entry `racemech\serve` (runs
+  `racemech-hidden.vbs serve` on demand: `schtasks /Run /TN "racemech\serve"`); stop the old one
+  first (end the `python.exe` serving port 8000). Serve reads the data only when it starts, so
+  restart it after a manual `racemech sync`.
 
 ## Evaluation
 

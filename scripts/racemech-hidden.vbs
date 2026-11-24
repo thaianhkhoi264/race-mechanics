@@ -1,5 +1,5 @@
 ' Runs `racemech <args>` from the repo root without a console window, appending its output to
-' data\<first arg>.log. Used by the Windows Task Scheduler entries (see README "Serving
+' data\<first arg>.log. Used by racemech-logon.vbs and the Task Scheduler entry (see README "Serving
 ' bot_repo"), e.g.:   wscript.exe scripts\racemech-hidden.vbs serve
 Set sh = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
