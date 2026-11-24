@@ -276,7 +276,7 @@
 - id: general-pace-down
   category: general
   question: what is pace down mode
-  keywords: [["0.945"], ["0.6", "60%", "hp use", "less hp", "saves hp"]]
+  keywords: [["0.945"], ["0.6", "60%", "hp use", "less hp", "saves hp", "40% less"]]
   forbid: ["-0.8", "−0.8"]
 
 - id: general-power
