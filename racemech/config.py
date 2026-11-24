@@ -60,7 +60,8 @@ class Settings:
     num_ctx: int = 16384
     # `racemech serve` (a calling application asks questions over HTTP). The token is a shared
     # secret sent as "Authorization: Bearer <token>"; the server won't start without one.
-    serve_host: str = "0.0.0.0"
+    # The default listens on this machine only; set serve_host = "0.0.0.0" to serve other machines.
+    serve_host: str = "127.0.0.1"
     serve_port: int = 8000
     serve_token: str = ""
     serve_max_waiting: int = 3

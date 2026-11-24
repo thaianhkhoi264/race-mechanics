@@ -30,7 +30,7 @@ num_ctx = 16384
 
 # racemech serve (optional HTTP server). Keep the token secret; the calling application sends the
 # same value.
-# serve_host = "0.0.0.0"
+# serve_host = "127.0.0.1"         # this machine only; "0.0.0.0" serves other machines too
 # serve_port = 8000
 # serve_token = "<long random string>"
 # serve_max_waiting = 3
