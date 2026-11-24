@@ -64,10 +64,10 @@ class ContextBuilder:
         self._sims: dict[int, list[dict]] = {}
 
     def _snapshots(self, number: int) -> list[dict]:
-        """simulation snapshots for one CM (empty if none are stored or the bot module is missing)."""
+        """Simulation snapshots for one CM (empty if none are stored or sim_module is missing)."""
         if number not in self._sims:
             try:
-                self._sims[number] = self.bl.simulation.snapshots(number, sim_dir(self.bl.data_dir))
+                self._sims[number] = self.bl.sim.snapshots(number, sim_dir(self.bl.data_dir))
             except (AttributeError, OSError, ValueError):
                 self._sims[number] = []
         return self._sims[number]
@@ -122,9 +122,9 @@ class ContextBuilder:
             return
         stats = simulation.skill_stats(sid, snaps)
         if stats is None:
-            ctx.notes.append(f"In the simulations' CM#{number} simulations nobody owned {name}.")
+            ctx.notes.append(f"In the CM#{number} simulations nobody owned {name}.")
             return
-        ctx.facts.append(calc.Fact(f"Simulation data (simulation): {name} in CM#{number}",
+        ctx.facts.append(calc.Fact(f"Simulation data: {name} in CM#{number}",
                                    simulation.describe(stats, snaps[-1]["meta"], styles or None)))
 
     def build(self, question: str) -> Context:

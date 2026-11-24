@@ -2,8 +2,8 @@
 Characters (cards): which version a question means, how she should be run, and which of her
 own skills restore HP on a course.
 
-Facts come from the Global ``master.mdb`` (aptitudes, unique skill, built-in skills). the character database's
-``character-cards.json`` only supplies version tags ("new_year") so community names like
+Facts come from the Global ``master.mdb`` (aptitudes, unique skill, built-in skills). The community
+character database's ``character-cards.json`` only supplies version tags ("new_year") so community names like
 "NY Dia" resolve to a card; nicknames and version words live in ``knowledge/aliases.yaml``.
 """
 from __future__ import annotations
@@ -25,7 +25,7 @@ DISTANCE_RANGES = {"sprint": "Sprint (under 1600 m)", "mile": "Mile (1600-1999 m
                    "medium": "Medium (2000-2499 m)", "long": "Long (2500 m or more)"}
 GRADE_ORDER = "GFEDCBAS"
 
-# the character database's version tags whose display name is not plain title case (from the character database's own table).
+# Version tags whose display name is not plain title case (from the character database's own table).
 VERSION_NAMES = {
     "alt": "Alt Version", "fall_festival": "Festival", "grand_live": "Grand Concert", "blaze": "BLAZE",
     "sports_fest": "Sports Festival", "larc": "Project L'Arc", "uaf": "U.A.F.",
@@ -57,7 +57,7 @@ def version_name(tag: str | None) -> str:
 
 
 def load_versions(path: Path) -> dict[int, str | None]:
-    """card_id -> the character database version tag (None for the original version)."""
+    """card_id -> version tag (None for the original version)."""
     if not path.is_file():
         return {}
     try:

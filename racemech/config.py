@@ -5,8 +5,8 @@ Settings, read from (lowest to highest priority):
 2. ``racemech.toml`` in the working directory (gitignored)
 3. environment variables ``RACEMECH_<KEY>`` (e.g. ``RACEMECH_MODEL``)
 
-Nothing machine-specific is built in: the bot_repo checkout, the game databases and the
-copy sources stay unset until ``racemech.toml`` or the environment provides them (see
+Nothing machine-specific is built in: the ``bot_repo`` codebase, the game databases and the
+data sources stay unset until ``racemech.toml`` or the environment provides them (see
 ``racemech.example.toml``). Commands that need one say which setting is missing.
 """
 from __future__ import annotations
@@ -21,7 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 @dataclass(frozen=True)
 class Settings:
-    # Read-only path to a bot_repo checkout whose calculator modules are reused.
+    # Read-only path to the codebase whose calculator modules are reused.
     bot_repo: Path | None = None
     # Local copies of game data live here (never committed).
     data_dir: Path = REPO_ROOT / "data"
@@ -39,23 +39,32 @@ class Settings:
     # Put the whole race mechanics doc in the system prompt (a fixed prefix Ollama can reuse)
     # instead of retrieving mechanics sections per question.
     full_mechanics: bool = True
-    # Where `racemech sync` copies the character database's character-cards.json from (scp host:path or a local
-    # path), e.g. a copy a scraper keeps current. Empty: download it from the character database.
+    # Online sources for `racemech sync`; each one left empty is skipped (see data_sync.py).
+    # Course geometry JSON, keyed by course id.
+    course_data_url: str = ""
+    # Upcoming-events timeline JSON (optionally gzipped), for CMs not in the game data yet.
+    cm_timeline_url: str = ""
+    # Where `racemech sync` copies character-cards.json from (scp host:path or a local path).
+    # If that fails, it downloads the file via the manifest ("character-cards" -> hash) and the
+    # data URL template with {name} and {hash} fields.
     cards_source: str = ""
-    # Answer voice: "" (plain) or "persona" (see racemech/prompts/voice_persona.md).
-    voice: str = ""
-    # Where `racemech sync` copies simulation CM simulation snapshots from (scp host:path), e.g. where
-    # bot_repo saves them daily. Empty: fetch directly with the bot's sim_module.
+    cards_manifest_url: str = ""
+    cards_data_url: str = ""
+    # Where `racemech sync` copies CM simulation snapshots from (scp host:path). If that fails, it
+    # fetches them with this module of the bot_repo codebase, which also reads them.
     sim_source: str = ""
+    sim_module: str = ""
+    # Answer persona: path to a persona TOML file (see docs/persona.example.toml); "" = plain.
+    voice: str = ""
     # Model context window in tokens.
     num_ctx: int = 16384
-    # `racemech serve` (bot_repo asks questions over the LAN). The token is a shared secret
-    # the bot sends as "Authorization: Bearer <token>"; the server won't start without one.
+    # `racemech serve` (a calling application asks questions over HTTP). The token is a shared
+    # secret sent as "Authorization: Bearer <token>"; the server won't start without one.
     serve_host: str = "0.0.0.0"
     serve_port: int = 8000
     serve_token: str = ""
     serve_max_waiting: int = 3
-    serve_voice: str = "persona"
+    serve_voice: str = ""
 
 
 def _coerce(raw, default, type_name: str = ""):

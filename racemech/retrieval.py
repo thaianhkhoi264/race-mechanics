@@ -2,7 +2,7 @@
 Keyword retrieval (BM25) over the knowledge pack. Fully local, no model, deterministic.
 
 Documents are the ``## `` sections of ``racemech/knowledge/*.md`` plus, when available, one
-document per field of the condition-field reference (read from the bot checkout at runtime;
+document per field of the condition-field reference (read from the bot_repo codebase at runtime;
 that text is community-written, so it is not shipped in this repo).
 """
 from __future__ import annotations

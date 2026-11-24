@@ -9,7 +9,7 @@ def botlib():
     """Real bot modules + synced data; integration tests skip when unavailable."""
     s = load_settings()
     try:
-        return BotLib(s.bot_repo, s.data_dir).load()
+        return BotLib(s.bot_repo, s.data_dir, s.sim_module).load()
     except BotLibError as exc:
         pytest.skip(f"integration setup unavailable: {exc}")
 

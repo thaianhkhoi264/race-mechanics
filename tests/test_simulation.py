@@ -1,4 +1,4 @@
-"""simulation snapshot analysis on a small synthetic snapshot (no network, no bot)."""
+"""CM simulation snapshot analysis on a small synthetic snapshot (no network, no bot)."""
 import pytest
 
 from racemech import simulation

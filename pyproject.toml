@@ -17,7 +17,7 @@ dependencies = [
 [project.optional-dependencies]
 # Needed to import the bot_repo calculator modules (they import these).
 bot = [
-    "certifi>=2024",     # CA bundle for the simulation fallback fetch on Windows
+    "certifi>=2024",     # CA bundle for the sim_module fallback fetch on Windows
     "discord.py>=2.7",
     "aiohttp>=3.14",
     "pillow>=12",
@@ -39,7 +39,7 @@ racemech = ["knowledge/*.md", "prompts/*.md"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
-    "integration: needs the bot_repo checkout and synced data (skipped when missing)",
+    "integration: needs the bot_repo codebase and synced data (skipped when missing)",
     "llm: needs a running Ollama server (skipped when unreachable)",
 ]
 

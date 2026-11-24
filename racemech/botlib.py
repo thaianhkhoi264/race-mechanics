@@ -1,14 +1,14 @@
 """
-Read-only adapter around the bot_repo calculator modules.
+Read-only adapter around the calculator modules of the ``bot_repo`` codebase.
 
-The bot already has tested, deterministic code for skill trigger windows
+That codebase already has tested, deterministic code for skill trigger windows
 (``skill_describe``, ``skill_chart``) and the stamina model (``stamina_module``).
 Rather than copy it (and let the two drift), this module imports it from a local
-checkout of the bot and feeds it this project's own data: skills from the game's
+checkout and feeds it this project's own data: skills from the game's
 ``master.mdb`` (Global first, JP only for missing skills) and cached course geometry.
-Nothing in the bot repo is written to.
+Nothing in that codebase is written to.
 
-All access to bot internals goes through ``BotLib`` so a vendored copy could replace it
+All access to its internals goes through ``BotLib`` so a vendored copy could replace it
 later without touching the rest of this package.
 """
 from __future__ import annotations
@@ -25,24 +25,25 @@ from racemech.data_sync import cm_timeline_path, course_data_path
 
 
 class BotLibError(RuntimeError):
-    """The bot checkout or the synced data is missing or unusable."""
+    """The bot_repo codebase or the synced data is missing or unusable."""
 
 
 @dataclass
 class Course:
     course_id: int
-    entry: dict           # community skill data course_data entry (geometry)
+    entry: dict           # course_data entry (geometry)
     display: str          # e.g. "CM#22 — Tokyo 1600m Dirt, Left, Soft, Winter, Snow"
     cm: dict | None       # {"ground", "season", "weather", ...} for a CM, else None
     is_cm: bool
-    predicted: bool = False   # an unconfirmed events prediction
+    predicted: bool = False   # an unconfirmed timeline prediction
     note: str | None = None   # where the course came from, when it is not the Global game data
 
 
 class BotLib:
-    def __init__(self, bot_repo: Path | None, data_dir: Path):
+    def __init__(self, bot_repo: Path | None, data_dir: Path, sim_module: str = ""):
         self.bot_repo = Path(bot_repo) if bot_repo else None
         self.data_dir = Path(data_dir)
+        self.sim_module = sim_module
         self._loaded = False
 
     # ------------------------------------------------------------------ setup
@@ -51,10 +52,10 @@ class BotLib:
         if self._loaded:
             return self
         if self.bot_repo is None:
-            raise BotLibError("bot_repo is not set: point it at a bot_repo checkout in racemech.toml "
+            raise BotLibError("bot_repo is not set: point it at the calculator codebase in racemech.toml "
                               "or RACEMECH_BOT_REPO")
         if not (self.bot_repo / "skill_describe.py").is_file():
-            raise BotLibError(f"bot_repo checkout not found at {self.bot_repo} (set bot_repo)")
+            raise BotLibError(f"bot_repo codebase not found at {self.bot_repo} (set bot_repo)")
         try:
             self.game = gamedata.load(self.data_dir)
         except FileNotFoundError as exc:
@@ -69,10 +70,12 @@ class BotLib:
             self.cm = importlib.import_module("cm_module")
             self.describe = importlib.import_module("skill_describe")
             self.stamina = importlib.import_module("stamina_module")
-            try:
-                self.simulation = importlib.import_module("sim_module")     # optional
-            except ImportError:
-                self.simulation = None
+            self.sim = None                                                  # optional
+            if self.sim_module:
+                try:
+                    self.sim = importlib.import_module(self.sim_module)
+                except ImportError:
+                    self.sim = None
         except ImportError as exc:
             raise BotLibError(f"Could not import the bot modules ({exc}); install the [bot] extra") from exc
 
@@ -110,7 +113,7 @@ class BotLib:
         return s.name if s else None
 
     def _load_timeline(self) -> dict[int, dict]:
-        """Announced/predicted CMs from the cached events timeline, parsed by the bot's own parser."""
+        """Announced/predicted CMs from the cached timeline, parsed by the bot_repo's own parser."""
         path = cm_timeline_path(self.data_dir)
         if not path.is_file():
             return {}

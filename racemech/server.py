@@ -1,7 +1,7 @@
 """
-``racemech serve``: answer questions for bot_repo over the network.
+``racemech serve``: answer questions for a calling application over HTTP.
 
-The bot (on the remote host) posts a question; this process (on the PC, next to Ollama) builds the context
+The caller posts a question; this process (on the machine running Ollama) builds the context
 and asks the model. Answers are computed one at a time because the GPU is the bottleneck; when too
 many questions are already waiting the service answers 503 "busy" instead of queueing forever.
 

@@ -9,7 +9,7 @@ versions; JP names are Japanese.
 ``racemech sync`` copies the databases into ``<data_dir>/game/`` (so a running or
 patching game is never touched) and this module only ever opens those copies read-only.
 
-Skills are converted to the community skill data JSON shape the bot_repo calculators
+Skills are converted to the community skill-data JSON shape the bot_repo calculators
 already consume:
 
     {"rarity": int, "wisdomCheck": int, "tags": [int],
@@ -45,7 +45,7 @@ class Skill:
     name: str
     description: str
     source: str          # "global" or "jp"
-    entry: dict          # community skill data shaped
+    entry: dict          # community skill-data shaped
 
 
 @dataclass
@@ -53,7 +53,7 @@ class ChampionsMeeting:
     number: int
     start_ts: int
     end_ts: int
-    course_set: int      # same id as community skill data course_data keys
+    course_set: int      # same id as the course_data keys
     track_id: int
     track_name: str
     distance: int
@@ -73,7 +73,7 @@ class Card:
     """One playable character version (a "card"), from the Global client."""
     card_id: int
     chara_id: int
-    name: str                      # "Satono Diamond"
+    name: str                      # "Special Week"
     title: str                     # "[Jade's Prosperity]"
     default_style: str | None      # the game's default running style: front/pace/late/end
     distance: dict[str, str]       # sprint/mile/medium/long -> grade letter
@@ -92,7 +92,7 @@ class GameData:
 
     @property
     def skill_data(self) -> dict:
-        """sid -> community skill data entry (what the bot calculators expect)."""
+        """sid -> skill-data entry (what the bot_repo calculators expect)."""
         return {sid: s.entry for sid, s in self.skills.items()}
 
     @property
@@ -113,7 +113,7 @@ def _texts(con: sqlite3.Connection, category: int) -> dict[int, str]:
 
 
 def row_to_entry(r: sqlite3.Row) -> dict:
-    """One skill_data row -> community skill data entry."""
+    """One skill_data row -> skill-data entry."""
     alternatives = []
     for alt in (1, 2):
         cond = r[f"condition_{alt}"] or ""

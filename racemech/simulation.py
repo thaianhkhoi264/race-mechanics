@@ -1,7 +1,7 @@
 """
-Facts from the simulations' CM simulations (<simulation site>): how often a skill fires on
-real players' builds, where, and how often its owner wins when it does. Snapshots are stored by
-the bot_repo codebase's ``sim_module`` (daily) and copied here by ``racemech sync``.
+Facts from community CM simulation snapshots: how often a skill fires on real players' builds,
+where, and how often its owner wins when it does. Snapshots are copied here by ``racemech sync``
+and read with the ``sim_module`` of the ``bot_repo`` codebase.
 
 Numbers are from simulated races of real teams, and they show correlation, not cause: runners
 already in a good position fire more skills and win more.
@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-# the simulations' style labels -> ours
+# The snapshots' style labels -> ours
 STYLES = {"Nige": "front", "Senko": "pace", "Sashi": "late", "Oikomi": "end", "Oonige": "runaway"}
 STYLE_NAME = {"front": "Front Runner", "pace": "Pace Chaser", "late": "Late Surger", "end": "End Closer",
               "runaway": "Runaway"}
@@ -50,7 +50,7 @@ def _ratio(a: float, b: float) -> float | None:
 
 
 def base_id(skill_id: str, overview: dict) -> str | None:
-    """simulation groups a skill with its inherited copy under one base id."""
+    """The snapshots group a skill with its inherited copy under one base id."""
     for base, ids in (overview.get("variants") or {}).items():
         if int(skill_id) in ids:
             return base

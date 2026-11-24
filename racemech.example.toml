@@ -3,14 +3,19 @@
 # override this file.
 
 # Machine-specific paths (nothing like this is built in)
-bot_repo = "<path to a bot_repo checkout>"          # read-only; its calculator modules are reused
+bot_repo = "<path to the calculator codebase>"              # read-only; its calculator modules are reused
 global_master = "<path to the Global client's master.mdb>"  # copied by `racemech sync`
 # jp_master = "<path to the JP client's master.mdb>"       # optional; fills skills Global lacks
 # data_dir = "data"                                         # default: data/ in this repo (gitignored)
 
-# Optional copy sources for `racemech sync` (scp host:path or a local path); empty = download
-# cards_source = "<host>:<path>/character-cards.json"
-# sim_source = "<host>:<path>/data/simulations"
+# Online sources for `racemech sync`; each one left out is skipped and its previous copy kept
+# course_data_url = "<URL of the course geometry JSON>"
+# cm_timeline_url = "<URL of the upcoming-events timeline JSON, optionally gzipped>"
+# cards_source = "<host>:<path>/character-cards.json"       # scp host:path or a local path
+# cards_manifest_url = "<URL of the character database manifest>"
+# cards_data_url = "<URL template with {name} and {hash}>"
+# sim_source = "<host>:<path>"                               # scp host:path of the simulation snapshots
+# sim_module = "<module in bot_repo that reads and fetches simulation snapshots>"
 
 # Model
 ollama_url = "http://localhost:11434"
@@ -21,11 +26,12 @@ temperature = 0.2
 retrieval_k = 5
 full_mechanics = true           # whole mechanics doc in the system prompt
 num_ctx = 16384
+# voice = "<path to a persona TOML file>"                   # see docs/persona.example.toml; empty = plain
 
-# racemech serve (answers for the calling application). Keep the token secret; the bot's
-# the caller holds the same value.
+# racemech serve (optional HTTP server). Keep the token secret; the calling application sends the
+# same value.
 # serve_host = "0.0.0.0"
 # serve_port = 8000
 # serve_token = "<long random string>"
 # serve_max_waiting = 3
-# serve_voice = "persona"
+# serve_voice = "<path to a persona TOML file>"

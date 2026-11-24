@@ -461,7 +461,7 @@
 - {id: act-claw-front, category: skill, question: should my front runner get claw forward in cm20, keywords: [["late surger"], ["no", "not", "useless", "cannot", "can't"]], forbid: ["GREAT"]}
 - {id: act-hp-cost, category: skill, question: does claw forward cost hp, keywords: [["2%"]]}
 
-# ---- simulation data (#46) ----
+# ---- CM simulation data ----
 - id: sim-budding-late-cm22
   category: skill
   question: how often does budding blossom actually fire for a late surger in cm22
@@ -469,7 +469,7 @@
 - id: sim-no-data-cm23
   category: skill
   question: how often does budding blossom actually fire for a late surger in cm23
-  keywords: [["no simulation", "don't have", "do not have", "not available", "no data", "isn't available", "no simulation"]]
+  keywords: [["no simulation", "don't have", "do not have", "not available", "no data", "isn't available"]]
 
 - id: carry-high-gear-cm20
   category: skill

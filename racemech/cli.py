@@ -25,16 +25,16 @@ def build_parser() -> argparse.ArgumentParser:
         if name == "ask":
             sp.add_argument("question", nargs="+")
         sp.add_argument("--model", help="Ollama model tag (overrides the setting)")
-        sp.add_argument("--voice", help='answer voice: "persona", or "" for plain (overrides the setting)')
+        sp.add_argument("--voice", help='persona TOML file, or "" for plain (overrides the setting)')
         sp.add_argument("--show-context", action="store_true", help="print what the model was given")
     ctx = sub.add_parser("context", help="show the context for a question without calling the model")
     ctx.add_argument("question", nargs="+")
-    sv = sub.add_parser("serve", help="answer questions for bot_repo over the network")
+    sv = sub.add_parser("serve", help="answer questions for a calling application over HTTP")
     sv.add_argument("--port", type=int, help="port (overrides the setting)")
     ev = sub.add_parser("eval", help="run the evaluation set against one or more models")
     ev.add_argument("--models", help="comma-separated Ollama tags (default: the configured model)")
     ev.add_argument("--only", help="comma-separated question ids")
-    ev.add_argument("--voice", help='answer voice for the run: "persona", or "" for plain')
+    ev.add_argument("--voice", help='persona TOML file for the run, or "" for plain')
     return p
 
 
@@ -70,7 +70,12 @@ def _main(argv: list[str] | None = None) -> int:
                                            download_courses=not args.offline,
                                            cards_source=settings.cards_source,
                                            sim_source=settings.sim_source,
-                                           bot_repo=settings.bot_repo):
+                                           bot_repo=settings.bot_repo,
+                                           course_data_url=settings.course_data_url,
+                                           cm_timeline_url=settings.cm_timeline_url,
+                                           cards_manifest_url=settings.cards_manifest_url,
+                                           cards_data_url=settings.cards_data_url,
+                                           sim_module=settings.sim_module):
             print(f"{item:20} {status}")
         return 0
     if args.command == "serve":

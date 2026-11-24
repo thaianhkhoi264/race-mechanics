@@ -78,8 +78,8 @@ def speed_carryover(fire_m: float, base_duration: float, distance: float,
                     speed_bonus: float) -> dict:
     """
     Where a speed skill fired at ``fire_m`` ends, and how much of it is still running when
-    late-race (the last spurt) starts at 2/3 of the distance. Same model as the bot_repo codebase's
-    /parent: the runner covers ground at base speed + the skill's own bonus while it lasts.
+    late-race (the last spurt) starts at 2/3 of the distance. Same model as the
+    bot_repo calculators: the runner covers ground at base speed + the skill's own bonus while it lasts.
     """
     dur = skill_duration_s(base_duration, distance)
     speed = base_speed(distance) + speed_bonus

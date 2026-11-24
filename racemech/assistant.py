@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import re
+import tomllib
 import zlib
 from dataclasses import dataclass
 from importlib import resources
+from pathlib import Path
 
 from racemech.botlib import BotLib
 from racemech.config import Settings
@@ -18,29 +20,36 @@ def system_prompt() -> str:
     return resources.files("racemech").joinpath("prompts/system.md").read_text(encoding="utf-8")
 
 
-VOICES = {"persona": "prompts/voice_persona.md"}
+@dataclass(frozen=True)
+class Persona:
+    """An answer voice, loaded from a TOML file (see docs/persona.example.toml). The prompt is
+    appended to the system prompt; the other fields are enforced in code."""
+    prompt: str = ""
+    openers: tuple[str, ...] = ()            # one is prefixed when the answer doesn't open in voice
+    bad_news_openers: tuple[str, ...] = ()   # used instead when the verdict is negative
+    in_voice: str = ""                       # regex: the opening already sounds in voice
+    note: str = ""                           # decoration kept at most once, never on bad news
 
 
-def voice_prompt(voice: str) -> str:
-    if not voice:
-        return ""
-    if voice not in VOICES:
-        raise ValueError(f"unknown voice {voice!r}; choose from: {', '.join(VOICES)}")
-    return resources.files("racemech").joinpath(VOICES[voice]).read_text(encoding="utf-8")
+def load_persona(path: str | Path | None) -> Persona | None:
+    """None for plain answers (empty setting); otherwise the persona in that TOML file."""
+    if not path or not str(path).strip():
+        return None
+    p = Path(path)
+    if not p.is_file():
+        raise ValueError(f"persona file not found: {p}")
+    with p.open("rb") as f:
+        raw = tomllib.load(f)
+    return Persona(prompt=raw.get("prompt", ""), openers=tuple(raw.get("openers", ())),
+                   bad_news_openers=tuple(raw.get("bad_news_openers", ())),
+                   in_voice=raw.get("in_voice", ""), note=raw.get("note", ""))
 
 
-# Bad news, refusals and declines: no ♪ on these (voice rule, enforced in code).
+# Bad news, refusals and declines: no persona note on these (enforced in code).
 _BAD_NEWS = re.compile(
     r"\b(not enough|short of|does not activate|doesn't activate|cannot activate|can't activate|"
     r"won't activate|does not fire|doesn't fire|I'm afraid|I don't have|I do not have|"
     r"don't have (?:that|any|information|data)|not available|unavailable|no information)\b", re.I)
-
-
-# Openers in the persona's style, picked per question so answers don't all start the same way.
-OPENERS = ("Of course, Trainer!", "Ah, a good question!", "Leave it to me!",
-           "Let's see what the numbers say!", "Happy to help, Trainer!", "Here's what I found!")
-BAD_NEWS_OPENERS = ("Hm, I see...", "I'm afraid this one is bad news...", "Oh dear...",
-                    "Let me be honest...")
 
 
 _KEY_LINE = re.compile(r"^- ((?:VERDICT|RECOMMENDATION)[^\n]*)$", re.M)
@@ -75,24 +84,30 @@ def voice_problems(text: str, context: str, question: str, character_names: set[
     return problems
 
 
-# Signs the opening already sounds like her (otherwise code adds an opener).
-_IN_VOICE = re.compile(r"Trainer|Hehe|♪|Oh dear|Oh no|I'm afraid|Let's|Shall we|Of course|Leave it to me|"
-                       r"^(?:Ah|Hm|Oh|Wow|Bravo)\b|Happy to help|Let me", re.M)
+def _opener(question: str, context: str, persona: Persona) -> str:
+    """A persona opener picked per question, so answers don't all start the same way ("" if none)."""
+    pool = persona.bad_news_openers if _NEGATIVE.search(context) else persona.openers
+    return pool[zlib.crc32(question.encode("utf-8")) % len(pool)] if pool else ""
 
 
-def _opener(question: str, context: str) -> str:
-    pool = BAD_NEWS_OPENERS if _NEGATIVE.search(context) else OPENERS
-    return pool[zlib.crc32(question.encode("utf-8")) % len(pool)]
+def _in_voice(text: str, persona: Persona) -> bool:
+    """The opening already sounds like the persona (otherwise code adds an opener)."""
+    return bool(persona.in_voice) and re.search(persona.in_voice, text[:160], re.M) is not None
 
 
-def tidy_voice(text: str) -> str:
-    """No ♪ on bad news or declines; at most one ♪ otherwise."""
-    if "♪" not in text:
+def _with_opener(opener: str, text: str) -> str:
+    return f"{opener} {text}" if opener else text
+
+
+def tidy_voice(text: str, note: str) -> str:
+    """No note on bad news or declines; at most one note otherwise."""
+    if not note or note not in text:
         return text
+    strip = re.compile(" ?" + re.escape(note))
     if _BAD_NEWS.search(text):
-        return re.sub(r" ?♪", "", text)
-    first = text.index("♪") + 1
-    return text[:first] + re.sub(r" ?♪", "", text[first:])
+        return strip.sub("", text)
+    first = text.index(note) + len(note)
+    return text[:first] + strip.sub("", text[first:])
 
 
 def mechanics_reference() -> str:
@@ -112,19 +127,20 @@ class Answer:
 class Assistant:
     def __init__(self, settings: Settings, model: str | None = None, voice: str | None = None):
         self.settings = settings
-        self.botlib = BotLib(settings.bot_repo, settings.data_dir).load()
+        self.botlib = BotLib(settings.bot_repo, settings.data_dir, settings.sim_module).load()
         exclude = frozenset({"mechanics"}) if settings.full_mechanics else frozenset()
         index = build_index(settings.bot_repo, exclude)
         self.builder = ContextBuilder(self.botlib, index, settings.retrieval_k)
         self.client = OllamaClient(settings.ollama_url, model or settings.model, settings.timeout_s,
                                    settings.keep_alive, settings.temperature, settings.num_ctx)
         self.reference = mechanics_reference() if settings.full_mechanics else ""
-        self.voice = settings.voice if voice is None else voice
+        self.persona = load_persona(settings.voice if voice is None else voice)
+        self.voice = self.persona is not None
         self.character_names = {c.name for c in self.botlib.game.cards.values()}
         self.system = system_prompt() + self.reference
         # The voice goes last: it stays salient after the long reference, and the prefix matches the
         # plain prompt so Ollama's prompt cache serves both.
-        self.voice_system = self.system + voice_prompt(self.voice)
+        self.voice_system = self.system + (self.persona.prompt if self.persona else "")
 
     def ask(self, question: str) -> Answer:
         ctx = self.builder.build(question)
@@ -133,15 +149,16 @@ class Assistant:
             return Answer(question, ctx, self.client.chat(self.system, user))
         # Answer in the voice in one pass; keep it only if code checks pass, else answer plainly.
         reply = self.client.chat(self.voice_system, user)
-        text = tidy_voice(reply.text)
+        persona = self.persona
+        text = tidy_voice(reply.text, persona.note)
         problems = voice_problems(text, ctx.render() + self.reference, question, self.character_names)
         if not problems:
-            if not _IN_VOICE.search(text[:160]):
-                text = f"{_opener(question, ctx.render())} {text}"      # always at least an opener
+            if not _in_voice(text, persona):
+                text = _with_opener(_opener(question, ctx.render(), persona), text)  # at least an opener
             reply.text = text
             return Answer(question, ctx, reply, "voiced")
         plain = self.client.chat(self.system, user)
         plain.seconds += reply.seconds
         plain.output_tokens += reply.output_tokens
-        plain.text = f"{_opener(question, ctx.render())} {plain.text}"
+        plain.text = _with_opener(_opener(question, ctx.render(), persona), plain.text)
         return Answer(question, ctx, plain, "fallback: " + "; ".join(problems))

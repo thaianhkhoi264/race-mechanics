@@ -19,3 +19,6 @@ reports/
 .idea/
 Thumbs.db
 desktop.ini
+
+# Local personas and other machine-only files (never committed)
+local/
