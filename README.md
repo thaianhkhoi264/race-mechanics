@@ -4,8 +4,8 @@ The language model never does the maths. race-mechanics is a local question-answ
 for Uma Musume (Global) skills and race mechanics: code works out every number, and a local model
 only puts the result into words.
 
-> **Published snapshot.** This repository is a snapshot of the project. Development continues
-> privately; this copy isn't updated, and issues and pull requests aren't tracked here.
+> **Published snapshot, taken 24 November 2026.** Development continues privately; this copy
+> isn't updated, and issues and pull requests aren't tracked here.
 
 **Eval:** two full runs of the 141-question eval on this code passed 137 and 141 questions
 (coverage questions: 56 and 58 of 58) with `qwen3.5:9b-q4_K_M`. The latest run is in
