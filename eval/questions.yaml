@@ -484,5 +484,5 @@
 - id: sim-budding-verdict-cm22
   category: skill
   question: "is budding blossom good for a late surger in cm22?"
-  keywords: [["when it fired", "when it fires", "it fired", "fired"], ["did not fire", "didn't fire", "not fire", "not firing", "without"], ["good", "excellent", "strong", "worth"]]
+  keywords: [["when it fired", "when it fires", "it fired", "fired", "fires", "activate"], ["did not fire", "didn't fire", "not fire", "not firing", "without", "did not", "when not", "didn't"], ["good", "excellent", "strong", "worth"]]
   forbid: ["not recommended", "contradicts", "should avoid being blocked", "owned in 31.9", "own this skill in about 31.9"]
