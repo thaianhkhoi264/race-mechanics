@@ -100,7 +100,7 @@ characters:
   taiki: Taiki Shuttle
   fuku: Matikanefukukitaru
 
-# Version words -> the character database version tag ("original" = the base version). Display names such as
+# Version words -> character-database version tag ("original" = the base version). Display names such as
 # "new year" or "summer" are recognised automatically.
 versions:
   ny: new_year
