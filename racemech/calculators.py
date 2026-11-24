@@ -498,7 +498,8 @@ def wit_on_course(bl: BotLib, course: Course, wit: float | None = None,
                     f"Stamina at {ws[-1]:g} Wit ({who}), which lowers the minimum Stamina for a full last "
                     f"spurt from about {worst:.0f} to {best:.0f} (highest running style).")
         points = [f"SUMMARY: Wit matters {weight} on this course because {down_m:.0f} m "
-                  f"({share * 100:.0f}% of the race) is downhill. Downhill accel mode gains about "
+                  f"({share * 100:.0f}% of the race) is downhill. Downhill accel mode (+0.3 + slope%/10 m/s "
+                  f"target speed and 60% less HP use, x0.4, while in it) gains about "
                   f"{g[ws[0]]:.1f} m ({g[ws[0]] / 2.5:.1f} lengths) at {ws[0]:g} Wit and {g[ws[-1]]:.1f} m "
                   f"({g[ws[-1]] / 2.5:.1f} lengths) at {ws[-1]:g} Wit.",
                   f"STAMINA: {stam}",

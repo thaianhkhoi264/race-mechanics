@@ -106,3 +106,8 @@ def test_speed_carryover_line(botlib):
     assert fixed and "fires at 1,525 m" in fixed[0] and "first 57 m (2.9 s) of late-race" in fixed[0]
     state = carry("10071")
     assert state and "only if it fires after about 1,372 m" in state[0]
+
+
+def test_wit_key_points_state_the_downhill_rule(botlib, cm21):
+    points = calc.wit_on_course(botlib, cm21).data["summary_points"]
+    assert "60% less HP use" in points[0] and "x0.4" in points[0] and len(points) == 3
